@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://margenlibre.com/</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!--
+    Cuando publiques las páginas SEO de la arquitectura futura, agregá una <url> por cada una:
+    /calculadora-rentabilidad-mercado-libre, /calculadora-comision-mercado-libre,
+    /cuanto-gano-vendiendo-en-mercado-libre, /punto-equilibrio-ecommerce,
+    /calculadora-margen-markup, /calculadora-roi-ecommerce, /rentabilidad-amazon,
+    /rentabilidad-tienda-nube, /rentabilidad-shopify, /rentabilidad-etsy
+  -->
+</urlset>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tests · MargenLibre</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 780px; margin: 2rem auto; padding: 0 1rem; background: #0b0f19; color: #e5e7eb; }
+    h1 { font-size: 1.3rem; }
+    .summary { font-size: 1.1rem; font-weight: 700; padding: .8rem 1rem; border-radius: 10px; margin: 1rem 0; }
+    .summary.ok { background: #0e2b22; color: #34d399; }
+    .summary.fail { background: #2c1618; color: #f87171; }
+    ul { list-style: none; padding: 0; }
+    li { padding: .5rem .8rem; border-radius: 8px; margin-bottom: .3rem; font-size: .92rem; }
+    li.ok { background: #131826; }
+    li.fail { background: #2c1618; color: #f87171; }
+    .err { display: block; font-size: .82rem; color: #fca5a5; margin-top: .3rem; white-space: pre-wrap; }
+    code { color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <h1>Tests del motor de cálculo — MargenLibre</h1>
+  <p>Abrí esta página con un servidor local (<code>python -m http.server</code>) y mirá los resultados abajo.</p>
+  <div id="summary" class="summary">Corriendo…</div>
+  <ul id="list"></ul>
+
+  <script defer src="../calculo.js"></script>
+  <script defer src="calculo.test.js"></script>
+  <script defer src="runner-ui.js"></script>
+</body>
+</html>

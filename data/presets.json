@@ -1,0 +1,37 @@
+{
+  "_aviso": "VALORES DE REFERENCIA EDITABLES — NO son datos oficiales verificados. Las comisiones, impuestos y costos de Mercado Libre cambian por categoría, país, tipo de publicación y régimen fiscal. Verificá siempre los valores vigentes en tu cuenta antes de decidir. Podés sobrescribir cualquiera de estos valores en la calculadora.",
+  "version": 1,
+  "fecha_actualizacion": "2026-09-02",
+  "moneda_defecto": "ARS",
+  "presets": [
+    {
+      "id": "vacio",
+      "nombre": "Empezar de cero",
+      "descripcion": "Cargá todos los valores manualmente.",
+      "oficial": false,
+      "valores": {
+        "comisionPct": "",
+        "cargoFijo": "",
+        "envio": "",
+        "impuestosPct": ""
+      }
+    },
+    {
+      "id": "referencia-comision",
+      "nombre": "Plantilla en blanco (solo estructura)",
+      "descripcion": "No trae ningún porcentaje cargado. Sirve para recordarte qué campos completar. Los números los ponés vos con los datos reales de tu cuenta.",
+      "oficial": false,
+      "valores": {
+        "comisionPct": "",
+        "cargoFijo": "",
+        "envio": "",
+        "impuestosPct": ""
+      }
+    }
+  ],
+  "notas": [
+    "Este archivo está separado del motor de cálculo a propósito: podés editar los presets sin tocar la lógica.",
+    "Para agregar un preset con valores de referencia propios, añadí un objeto a 'presets' con sus 'valores' y subí la 'fecha_actualizacion'.",
+    "Marcá siempre 'oficial': false salvo que tengas una fuente verificada y asumas la responsabilidad de mantenerla."
+  ]
+}

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ===== SEO ===== -->
+  <title>Calculadora de rentabilidad de Mercado Libre gratis | MargenLibre</title>
+  <meta name="description" content="Calculá tu ganancia neta, margen, ROI, punto de equilibrio y cuánto podés gastar en publicidad en Mercado Libre. Gratis, sin registro y con tus propios números." />
+  <link rel="canonical" href="https://margenlibre.com/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#111827" />
+
+  <!-- ===== Open Graph ===== -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="MargenLibre" />
+  <meta property="og:title" content="Calculadora de rentabilidad de Mercado Libre" />
+  <meta property="og:description" content="Descubrí cuánto ganás realmente en cada venta de Mercado Libre y cuánto podés invertir en publicidad sin perder plata." />
+  <meta property="og:url" content="https://margenlibre.com/" />
+  <meta property="og:locale" content="es_AR" />
+  <meta property="og:image" content="https://margenlibre.com/assets/og-image.png" />
+
+  <!-- ===== Twitter ===== -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Calculadora de rentabilidad de Mercado Libre" />
+  <meta name="twitter:description" content="Ganancia neta, margen, ROI, punto de equilibrio y máximo gasto publicitario. Gratis y sin registro." />
+  <meta name="twitter:image" content="https://margenlibre.com/assets/og-image.png" />
+
+  <!-- ===== Favicon ===== -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+  <!-- ===== Fonts ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
+
+  <link rel="stylesheet" href="styles.css?v=20260902" />
+
+  <!-- ===== JSON-LD: WebApplication ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "MargenLibre — Calculadora de rentabilidad de Mercado Libre",
+    "url": "https://margenlibre.com/",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "description": "Calculadora gratuita de rentabilidad para vendedores de Mercado Libre: ganancia neta, margen, ROI, punto de equilibrio y máximo gasto publicitario.",
+    "inLanguage": "es-AR",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "ARS" }
+  }
+  </script>
+
+  <!-- ===== JSON-LD: FAQPage (refleja las preguntas visibles) ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Cómo se calcula la rentabilidad de una venta en Mercado Libre?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Se restan del precio de venta todos los costos: costo del producto, comisión de Mercado Libre, cargo fijo, envío, impuestos, publicidad y otros gastos. Lo que queda es la ganancia neta. El margen es esa ganancia dividida por el precio, y el ROI es la ganancia dividida por el costo total." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuánto me cobra Mercado Libre por vender?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Mercado Libre cobra una comisión (un porcentaje del precio) que varía según la categoría y el tipo de publicación, y a veces un cargo fijo por unidad en productos de bajo precio. Los valores exactos cambian con el tiempo: consultá el simulador oficial o tu cuenta y cargá esos números en la calculadora." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuánto puedo gastar en publicidad sin perder plata?",
+        "acceptedAnswer": { "@type": "Answer", "text": "El máximo que podés gastar en Product Ads por venta es igual a tu ganancia antes de publicidad. Si gastás más que eso, cada venta pasa a pérdida. Ese límite dividido por el precio de venta es tu ACOS de equilibrio." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el ACOS de equilibrio?",
+        "acceptedAnswer": { "@type": "Answer", "text": "El ACOS (Advertising Cost of Sales) es el gasto en publicidad dividido por las ventas que generó, en porcentaje. El ACOS de equilibrio es el punto donde la publicidad se come toda tu ganancia: por debajo ganás, por encima perdés." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la diferencia entre margen y ROI?",
+        "acceptedAnswer": { "@type": "Answer", "text": "El margen mide la ganancia como porcentaje del precio de venta (cuánto de cada peso vendido te queda). El ROI mide la ganancia como porcentaje de lo que invertiste en costos (cuánto rinde tu plata invertida). Sirven para cosas distintas." }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el punto de equilibrio?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Es la cantidad de unidades que necesitás vender para cubrir tus costos fijos del lote (como la inversión en publicidad y otros gastos) y no perder dinero. A partir de esa cantidad, cada venta adicional es ganancia." }
+      }
+    ]
+  }
+  </script>
+
+  <!-- TODO ANALYTICS: pegá acá tu etiqueta de Google Analytics (GA4) cuando la tengas.
+       El sitio funciona perfectamente sin Analytics; ninguna función depende de él. -->
+  <!-- TODO COOKIES: si activás AdSense/Analytics, agregá acá tu banner de consentimiento (CMP). -->
+</head>
+
+<body>
+  <a class="skip-link" href="#calculadora">Saltar a la calculadora</a>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="MargenLibre — inicio">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 2 4-6"/></svg>
+        </span>
+        <span class="brand-name">Margen<span class="brand-accent">Libre</span></span>
+      </a>
+      <nav class="header-nav" aria-label="Herramientas">
+        <a href="#guias" class="nav-link">Cómo funciona</a>
+        <a href="#faq" class="nav-link">Preguntas</a>
+        <a href="#mas-herramientas" class="nav-link nav-link--muted">Más herramientas</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===================== HERO + TOOL ===================== -->
+    <section class="hero" id="calculadora">
+      <div class="container">
+        <h1 class="hero-title">Calculadora de rentabilidad de Mercado Libre</h1>
+        <p class="hero-sub">
+          Después de comisiones, impuestos, envío y publicidad: <strong>¿cuánto ganás
+          realmente en cada venta</strong> y cuánto podés gastar en anuncios sin perder plata.
+        </p>
+
+        <div class="tool-grid">
+          <!-- ---------- FORMULARIO ---------- -->
+          <form class="tool-card" id="form-calc" novalidate autocomplete="off">
+            <div class="steps-head">
+              <span class="step-chip">Gratis · sin registro · privado</span>
+              <div class="moneda-wrap">
+                <label for="moneda">Moneda</label>
+                <select id="moneda" name="moneda" aria-label="Moneda de cálculo"></select>
+              </div>
+            </div>
+
+            <!-- Paso 1 -->
+            <details class="acc" open>
+              <summary class="acc-sum">
+                <span class="acc-num">1</span>
+                <span class="acc-title">Contame sobre tu producto</span>
+                <svg class="acc-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </summary>
+              <div class="acc-body">
+                <div class="field">
+                  <label for="precioVenta">Precio de venta <span class="req" title="obligatorio">*</span></label>
+                  <div class="input-money" data-sym="$">
+                    <input id="precioVenta" name="precioVenta" type="text" inputmode="decimal" placeholder="0" aria-describedby="precioVenta-help" />
+                  </div>
+                  <small id="precioVenta-help" class="hint">Lo que paga el comprador por una unidad.</small>
+                  <small class="err" data-err="precioVenta" role="alert"></small>
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="costoProducto">Costo del producto</label>
+                    <div class="input-money" data-sym="$">
+                      <input id="costoProducto" name="costoProducto" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">Lo que te cuesta a vos por unidad.</small>
+                    <small class="err" data-err="costoProducto" role="alert"></small>
+                  </div>
+                  <div class="field">
+                    <label for="unidades">Cantidad de unidades</label>
+                    <input id="unidades" name="unidades" type="text" inputmode="numeric" placeholder="1" />
+                    <small class="hint">Para calcular la ganancia del lote.</small>
+                    <small class="err" data-err="unidades" role="alert"></small>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Paso 2 -->
+            <details class="acc" open>
+              <summary class="acc-sum">
+                <span class="acc-num">2</span>
+                <span class="acc-title">Agregá tus costos</span>
+                <svg class="acc-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </summary>
+              <div class="acc-body">
+                <div class="preset-bar">
+                  <label for="preset">Valores de referencia</label>
+                  <select id="preset" name="preset" aria-describedby="preset-help"></select>
+                  <small id="preset-help" class="hint preset-hint">
+                    Referencia editable, <strong>no</strong> son datos oficiales. Actualizado:
+                    <span id="preset-fecha">—</span>. Cargá los números reales de tu cuenta.
+                  </small>
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="comisionPct">Comisión de Mercado Libre</label>
+                    <div class="input-pct">
+                      <input id="comisionPct" name="comisionPct" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">% sobre el precio. Varía por categoría.</small>
+                    <small class="err" data-err="comisionPct" role="alert"></small>
+                  </div>
+                  <div class="field">
+                    <label for="cargoFijo">Cargo fijo de ML</label>
+                    <div class="input-money" data-sym="$">
+                      <input id="cargoFijo" name="cargoFijo" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">Costo fijo por unidad, si aplica.</small>
+                    <small class="err" data-err="cargoFijo" role="alert"></small>
+                  </div>
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="envio">Costo de envío</label>
+                    <div class="input-money" data-sym="$">
+                      <input id="envio" name="envio" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">Lo que te cuesta el envío por unidad.</small>
+                    <small class="err" data-err="envio" role="alert"></small>
+                  </div>
+                  <div class="field">
+                    <label for="impuestosPct">Impuestos</label>
+                    <div class="input-pct">
+                      <input id="impuestosPct" name="impuestosPct" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">% sobre el precio (IIBB, IVA, etc.).</small>
+                    <small class="err" data-err="impuestosPct" role="alert"></small>
+                  </div>
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="publicidad">Inversión en publicidad</label>
+                    <div class="input-money" data-sym="$">
+                      <input id="publicidad" name="publicidad" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">Total en Product Ads para todo el lote.</small>
+                    <small class="err" data-err="publicidad" role="alert"></small>
+                  </div>
+                  <div class="field">
+                    <label for="otrosCostos">Otros costos</label>
+                    <div class="input-money" data-sym="$">
+                      <input id="otrosCostos" name="otrosCostos" type="text" inputmode="decimal" placeholder="0" />
+                    </div>
+                    <small class="hint">Empaque, packaging, etc. (total del lote).</small>
+                    <small class="err" data-err="otrosCostos" role="alert"></small>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="margenObjetivoPct">Margen objetivo <span class="opt">(opcional)</span></label>
+                  <div class="input-pct">
+                    <input id="margenObjetivoPct" name="margenObjetivoPct" type="text" inputmode="decimal" placeholder="Ej: 20" />
+                  </div>
+                  <small class="hint">Si lo ingresás, te decimos el precio mínimo para alcanzarlo.</small>
+                  <small class="err" data-err="margenObjetivoPct" role="alert"></small>
+                </div>
+              </div>
+            </details>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-primary" id="btn-recalcular">Recalcular</button>
+              <button type="button" class="btn btn-ghost" id="btn-limpiar">Limpiar todo</button>
+            </div>
+            <p class="live-note">El resultado se actualiza solo mientras escribís.</p>
+          </form>
+
+          <!-- ---------- RESULTADOS ---------- -->
+          <div class="results" id="resultados" aria-live="polite">
+            <!-- Estado vacío -->
+            <div class="results-empty" id="results-empty">
+              <div class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>
+              </div>
+              <h2>Tu resultado aparece acá</h2>
+              <p>Completá al menos el precio de venta para ver tu ganancia neta, margen, ROI y cuánto podés gastar en publicidad.</p>
+            </div>
+
+            <!-- Estado con datos -->
+            <div class="results-full" id="results-full" hidden>
+              <div class="paso3-tag">Paso 3 · Descubrí cuánto ganás</div>
+
+              <!-- Semáforo + resultado principal -->
+              <div class="hero-result" data-estado="rentable" id="hero-result">
+                <div class="semaforo" id="semaforo">
+                  <span class="semaforo-dot" aria-hidden="true"></span>
+                  <span class="semaforo-label" id="semaforo-label">Rentable</span>
+                </div>
+                <div class="primary-figures">
+                  <div class="figure figure-main">
+                    <span class="figure-label">Ganancia neta por venta</span>
+                    <span class="figure-value" id="r-gananciaUnit">—</span>
+                  </div>
+                  <div class="figure">
+                    <span class="figure-label">Margen neto</span>
+                    <span class="figure-value" id="r-margenPct">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Diferencial: publicidad -->
+              <div class="ads-box" id="ads-box">
+                <h3 class="ads-title">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                  ¿Cuánto puedo gastar en publicidad sin perder plata?
+                </h3>
+                <div class="ads-grid">
+                  <div class="ads-cell">
+                    <span class="ads-cell-label">Máximo por venta</span>
+                    <span class="ads-cell-value" id="r-maxAdsVenta">—</span>
+                  </div>
+                  <div class="ads-cell">
+                    <span class="ads-cell-label">ACOS de equilibrio</span>
+                    <span class="ads-cell-value" id="r-acos">—</span>
+                  </div>
+                  <div class="ads-cell">
+                    <span class="ads-cell-label" id="r-difAds-label">Margen libre para ads</span>
+                    <span class="ads-cell-value" id="r-difAds">—</span>
+                  </div>
+                </div>
+                <p class="ads-msg" id="ads-msg"></p>
+              </div>
+
+              <!-- Ad slot debajo del resultado -->
+              <aside class="ad-slot" aria-label="Publicidad">
+                <span>Publicidad</span>
+                <!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE -->
+              </aside>
+
+              <!-- Desglose completo -->
+              <div class="breakdown">
+                <h3 class="breakdown-title">Desglose completo</h3>
+                <ul class="breakdown-list" id="breakdown-list"></ul>
+              </div>
+
+              <!-- Cómo se calculó -->
+              <details class="calc-detail" id="como-calculo">
+                <summary>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  Cómo se calculó (con tus números)
+                </summary>
+                <div class="calc-steps" id="calc-steps"></div>
+              </details>
+
+              <button type="button" class="btn btn-ghost btn-block" id="btn-reset-vista">Empezar de nuevo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacidad + límites -->
+        <p class="privacy-badge">
+          🔒 100 % privado — todos los cálculos se hacen en tu navegador. No se sube nada
+          a ningún servidor y funciona sin conexión después de la primera carga.
+        </p>
+      </div>
+    </section>
+
+    <!-- Ad slot leaderboard -->
+    <div class="container">
+      <aside class="ad-slot ad-leaderboard" aria-label="Publicidad">
+        <span>Publicidad</span>
+        <!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE -->
+      </aside>
+    </div>
+
+    <!-- ===================== CONTENIDO SEO ===================== -->
+    <section class="content" id="guias">
+      <div class="container content-inner">
+
+        <article class="prose">
+          <h2>¿Cómo calcular la rentabilidad de una venta en Mercado Libre?</h2>
+          <p>
+            Calcular la rentabilidad significa responder una pregunta simple: después de
+            <em>todos</em> tus costos, ¿cuánto te queda de cada venta? El simulador oficial
+            de Mercado Libre te muestra cuánto te cobra la plataforma, pero no incluye el
+            costo de tu producto, tus impuestos ni lo que gastás en publicidad. Esta
+            calculadora junta todo.
+          </p>
+          <p>El proceso es siempre el mismo:</p>
+          <ol>
+            <li>Partís del <strong>precio de venta</strong> (lo que paga el comprador).</li>
+            <li>Le restás el <strong>costo del producto</strong> y la <strong>comisión</strong> de Mercado Libre.</li>
+            <li>Le restás el <strong>cargo fijo</strong>, el <strong>envío</strong> y los <strong>impuestos</strong>.</li>
+            <li>Le restás la <strong>publicidad</strong> y cualquier <strong>otro costo</strong> (empaque, etiquetas, etc.).</li>
+            <li>Lo que queda es tu <strong>ganancia neta</strong>. Dividida por el precio, es tu <strong>margen</strong>.</li>
+          </ol>
+          <p class="note-inline">
+            Las comisiones, impuestos y costos de envío cambian por categoría, país y tipo
+            de publicación, y se actualizan con el tiempo. Verificá siempre los valores
+            vigentes en tu cuenta antes de decidir; acá los cargás vos.
+          </p>
+        </article>
+
+        <article class="prose">
+          <h2>¿Qué costos tenés que considerar?</h2>
+          <ul class="cost-list">
+            <li><strong>Costo del producto:</strong> lo que te cuesta conseguir cada unidad (fabricación, compra al proveedor, importación).</li>
+            <li><strong>Comisión de Mercado Libre:</strong> un porcentaje del precio que cambia según la categoría y el tipo de publicación (clásica o premium).</li>
+            <li><strong>Cargo fijo:</strong> en productos de precio bajo, Mercado Libre puede sumar un costo fijo por unidad vendida.</li>
+            <li><strong>Envío:</strong> según Mercado Envíos y quién lo paga. En muchos casos el costo lo absorbe el vendedor total o parcialmente.</li>
+            <li><strong>Impuestos:</strong> IVA, Ingresos Brutos, retenciones y percepciones dependen de tu situación fiscal. Se cargan como porcentaje del precio.</li>
+            <li><strong>Publicidad (Product Ads):</strong> lo que invertís para aparecer primero. Es el costo que más rápido puede dar vuelta tu rentabilidad.</li>
+            <li><strong>Otros costos:</strong> empaque, etiquetas, packaging premium, mermas, comisiones de pasarela adicionales.</li>
+          </ul>
+        </article>
+
+        <!-- Ad slot in-content -->
+        <aside class="ad-slot" aria-label="Publicidad">
+          <span>Publicidad</span>
+          <!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE -->
+        </aside>
+
+        <article class="prose">
+          <h2>Margen vs. ROI: ¿cuál mirar?</h2>
+          <p>
+            Son dos formas distintas de mirar la misma ganancia y conviene entender la diferencia:
+          </p>
+          <div class="compare">
+            <div class="compare-card">
+              <h3>Margen</h3>
+              <p>Ganancia ÷ <strong>precio de venta</strong>, en porcentaje.</p>
+              <p class="compare-ex">Responde: «de cada $100 que vendo, ¿cuánto me queda?». Sirve para comparar productos y fijar precios.</p>
+            </div>
+            <div class="compare-card">
+              <h3>ROI</h3>
+              <p>Ganancia ÷ <strong>costo total invertido</strong>, en porcentaje.</p>
+              <p class="compare-ex">Responde: «por cada $100 que puse, ¿cuánto gané?». Sirve para comparar en qué te conviene invertir tu capital.</p>
+            </div>
+          </div>
+          <p>
+            Un producto puede tener buen margen pero ROI bajo si requiere mucho capital
+            inmovilizado, y al revés. Mirar los dos te da la foto completa.
+          </p>
+        </article>
+
+        <article class="prose">
+          <h2>¿Cuánto puedo gastar en publicidad? ACOS y punto de equilibrio</h2>
+          <p>
+            Cuando hacés Product Ads, cada peso que gastás sale de tu ganancia. La pregunta
+            clave es: <strong>¿hasta cuánto puedo gastar antes de quedar en cero?</strong>
+          </p>
+          <p>
+            El <strong>máximo gasto publicitario por venta</strong> es igual a tu ganancia
+            <em>antes</em> de publicidad. Si tu producto te deja $2.000 de ganancia por venta
+            antes de anuncios, ese es tu techo: gastar más de $2.000 por venta en ads
+            significa vender a pérdida.
+          </p>
+          <p>
+            El <strong>ACOS de equilibrio</strong> es ese techo expresado como porcentaje del
+            precio. Con un precio de $10.000 y un techo de $2.000, tu ACOS de equilibrio es
+            20 %: mientras tu ACOS real esté por debajo de 20 %, ganás; por encima, perdés.
+          </p>
+          <p>
+            El <strong>punto de equilibrio</strong> te dice cuántas unidades necesitás vender
+            para recuperar una inversión fija (por ejemplo, una campaña de publicidad para
+            todo el lote) antes de empezar a ganar.
+          </p>
+        </article>
+
+        <!-- FAQ -->
+        <article class="prose faq" id="faq">
+          <h2>Preguntas frecuentes</h2>
+
+          <details class="faq-item">
+            <summary>¿Cómo se calcula la rentabilidad de una venta en Mercado Libre?</summary>
+            <p>Se restan del precio de venta todos los costos: producto, comisión, cargo fijo, envío, impuestos, publicidad y otros gastos. Lo que queda es la ganancia neta. El margen es esa ganancia dividida por el precio; el ROI, dividida por el costo total.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>¿Cuánto me cobra Mercado Libre por vender?</summary>
+            <p>Cobra una comisión (un porcentaje del precio) que depende de la categoría y del tipo de publicación, y a veces un cargo fijo por unidad en productos de precio bajo. Los valores exactos cambian con el tiempo: consultá el simulador oficial o tu cuenta y cargá esos números acá. Esta herramienta no fija comisiones: las ponés vos.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>¿Cuánto gano vendiendo en Mercado Libre?</summary>
+            <p>Depende de tu precio, tus costos y tu publicidad. Cargá tus números en la calculadora y vas a ver la ganancia neta por venta, el margen y la ganancia del lote completo según la cantidad de unidades.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>¿Cuánto puedo gastar en publicidad sin perder plata?</summary>
+            <p>Como máximo, tu ganancia antes de publicidad. Ese límite, dividido por el precio de venta, es tu ACOS de equilibrio. La calculadora te muestra el máximo por venta y la diferencia contra lo que estás gastando hoy.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>¿Cuál es la diferencia entre margen y ROI?</summary>
+            <p>El margen es la ganancia como porcentaje del precio de venta. El ROI es la ganancia como porcentaje de lo que invertiste en costos. El margen sirve para fijar precios; el ROI, para decidir dónde poner tu capital.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>¿Qué es el punto de equilibrio en Mercado Libre?</summary>
+            <p>La cantidad de unidades que tenés que vender para cubrir tus costos fijos del lote (como una campaña de publicidad) y no perder dinero. Desde esa cantidad en adelante, cada venta suma ganancia.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary>¿Los números de la calculadora son oficiales?</summary>
+            <p>No. La herramienta no incluye comisiones ni impuestos oficiales: todos los valores los ingresás vos con los datos reales de tu cuenta. Es orientativa y no reemplaza asesoramiento contable o fiscal.</p>
+          </details>
+        </article>
+
+        <!-- Disclaimer legal -->
+        <div class="disclaimer" role="note">
+          <strong>Aviso:</strong> esta herramienta es orientativa y no constituye
+          asesoramiento contable, fiscal, financiero ni comercial. Las comisiones,
+          impuestos, costos de envío y condiciones de las plataformas pueden cambiar.
+          Verificá los valores vigentes antes de tomar decisiones comerciales.
+        </div>
+
+        <!-- Más herramientas (futuro) -->
+        <section class="more-tools" id="mas-herramientas">
+          <h2>Más calculadoras (próximamente)</h2>
+          <div class="tools-grid">
+            <span class="tool-pill">Calculadora de comisión de Mercado Libre</span>
+            <span class="tool-pill">Cuánto gano vendiendo en Mercado Libre</span>
+            <span class="tool-pill">Punto de equilibrio para ecommerce</span>
+            <span class="tool-pill">Calculadora de margen y markup</span>
+            <span class="tool-pill">Calculadora de ROI para ecommerce</span>
+            <span class="tool-pill">Rentabilidad en Amazon</span>
+            <span class="tool-pill">Rentabilidad en Tienda Nube</span>
+            <span class="tool-pill">Rentabilidad en Shopify</span>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="brand-name">Margen<span class="brand-accent">Libre</span></span>
+        <p>Calculadora de rentabilidad para vendedores de Mercado Libre. Gratis y sin registro.</p>
+        <p class="footer-indep">Herramienta independiente. No está afiliada, asociada ni respaldada por Mercado Libre. «Mercado Libre» es marca de sus respectivos titulares.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Enlaces legales">
+        <a href="privacidad.html">Privacidad</a>
+        <a href="aviso-legal.html">Aviso legal</a>
+        <a href="#calculadora">Calculadora</a>
+        <a href="#faq">Preguntas</a>
+      </nav>
+    </div>
+    <div class="container footer-copy">
+      <span>© <span id="year">2026</span> MargenLibre</span>
+    </div>
+  </footer>
+
+  <!-- ===================== SCRIPTS ===================== -->
+  <script defer src="calculo.js?v=20260902"></script>
+  <script defer src="lib/manifest.js?v=20260902"></script>
+  <script defer src="main.js?v=20260902"></script>
+</body>
+</html>

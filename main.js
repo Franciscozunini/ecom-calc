@@ -273,28 +273,36 @@
   }
 
   /* ---------- Presets (desde JSON, editable) ---------- */
+  function aplicarPresetsData(data) {
+    var sel = document.getElementById("preset");
+    if (!sel || !data) return;
+    presetsData = data;
+    var fecha = document.getElementById("preset-fecha");
+    if (fecha && data.fecha_actualizacion) fecha.textContent = data.fecha_actualizacion;
+    (data.presets || []).forEach(function (p) {
+      var opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.nombre;
+      sel.appendChild(opt);
+    });
+  }
+
   function cargarPresets() {
     var sel = document.getElementById("preset");
     if (!sel) return;
-    fetch(BRAND.presetsUrl || "data/presets.json", { cache: "no-store" })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        presetsData = data;
-        var fecha = document.getElementById("preset-fecha");
-        if (fecha && data.fecha_actualizacion) fecha.textContent = data.fecha_actualizacion;
-        (data.presets || []).forEach(function (p) {
-          var opt = document.createElement("option");
-          opt.value = p.id;
-          opt.textContent = p.nombre;
-          sel.appendChild(opt);
+    // Versión de un solo archivo (offline / file://): los presets vienen inline.
+    if (window.__PRESETS__) { aplicarPresetsData(window.__PRESETS__); }
+    else {
+      fetch(BRAND.presetsUrl || "data/presets.json", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(aplicarPresetsData)
+        .catch(function () {
+          // Sin presets (por ejemplo abierto como archivo local sin servidor): no
+          // pasa nada, la calculadora funciona igual. Ocultamos el selector.
+          var bar = sel.closest(".preset-bar");
+          if (bar) bar.style.display = "none";
         });
-      })
-      .catch(function () {
-        // Sin presets (por ejemplo abierto como archivo local): no pasa nada,
-        // la calculadora funciona igual. Ocultamos el selector.
-        var bar = sel.closest(".preset-bar");
-        if (bar) bar.style.display = "none";
-      });
+    }
 
     sel.addEventListener("change", function () {
       if (!presetsData) return;

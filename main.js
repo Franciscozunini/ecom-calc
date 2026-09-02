@@ -334,19 +334,30 @@
     catStatus("Buscando en Mercado Libre…", "load");
     var lista = byId("cat-resultados"); if (lista) { lista.hidden = true; lista.innerHTML = ""; }
     var url = ML_BASE + "/sites/" + mlSite() + "/domain_discovery/search?limit=8&q=" + encodeURIComponent(q);
-    fetch(url).then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+    ultimoDebug = "";
+    fetch(url).then(function (r) {
+      if (!r.ok) { ultimoDebug = "GET " + url + " → HTTP " + r.status; throw new Error(ultimoDebug); }
+      return r.json();
+    })
       .then(function (arr) {
         if (!Array.isArray(arr) || arr.length === 0) { catStatus("No encontramos categorías para «" + q + "». Probá con otro nombre o cargá la comisión a mano abajo.", "warn"); return; }
-        // Deduplicar por category_id
+        // Deduplicar por category_id (los que tengan).
         var vistos = {}, items = [];
         arr.forEach(function (x) {
-          if (x.category_id && !vistos[x.category_id]) { vistos[x.category_id] = 1; items.push(x); }
+          var id = x.category_id;
+          if (id && !vistos[id]) { vistos[id] = 1; items.push(x); }
         });
+        if (!items.length) {
+          ultimoDebug = "domain_discovery sin category_id: " + JSON.stringify(arr).slice(0, 240);
+          catStatusError("Encontramos coincidencias pero sin id de categoría para consultar la comisión. Cargala a mano abajo.");
+          return;
+        }
         catStatus("", null);
         pintarResultados(items);
       })
-      .catch(function () {
-        catStatus("No pudimos conectar con Mercado Libre (puede ser tu conexión). Cargá tu comisión a mano abajo: está en tu publicación → «Costo de venta».", "warn");
+      .catch(function (err) {
+        ultimoDebug = ultimoDebug || (err && err.message) || String(err);
+        catStatusError("No pudimos conectar con Mercado Libre (puede ser tu conexión, o que la estés abriendo como archivo local). Cargá tu comisión a mano abajo: está en tu publicación → «Costo de venta».");
       });
   }
 
@@ -367,10 +378,18 @@
     });
   }
 
+  var ultimoDebug = "";
+
   // Trae la comisión oficial de una categoría y la aplica.
   function seleccionarCategoria(catId, nombre) {
     catSeleccionada = { id: catId, nombre: nombre };
     var lista = byId("cat-resultados"); if (lista) lista.hidden = true;
+    ultimoDebug = "";
+    if (!catId) {
+      mostrarCategoriaSeleccionada();
+      catStatusError("Esa opción no trae un id de categoría de Mercado Libre, así que no podemos consultar la comisión. Probá con otro nombre o cargala a mano.");
+      return;
+    }
     catStatus("Trayendo la comisión de «" + nombre + "»…", "load");
     traerComision(catId).then(function (fees) {
       feePorTipo = fees;
@@ -378,36 +397,86 @@
       mostrarCategoriaSeleccionada();
       aplicarComision();
       catStatus("", null);
-    }).catch(function () {
-      // Sin conexión: si hay cache, usarla; si no, dejar manual.
+    }).catch(function (err) {
       var cache = lsGet(LS_FEE + catId);
       if (cache && cache.fees) {
         feePorTipo = cache.fees;
         mostrarCategoriaSeleccionada();
         aplicarComision();
-        catStatus("Usamos un valor guardado (sin conexión con ML ahora).", "warn");
+        catStatus("Usamos un valor guardado antes (ahora no pudimos consultar a ML).", "warn");
       } else {
-        catStatus("Elegiste «" + nombre + "» pero no pudimos traer la comisión. Cargala a mano abajo.", "warn");
         mostrarCategoriaSeleccionada();
+        ultimoDebug = (err && err.message) || String(err);
+        catStatusError("Elegiste «" + nombre + "» pero no pudimos traer la comisión. Cargala a mano abajo (está en tu publicación → «Costo de venta»).");
       }
     });
   }
 
-  function traerComision(catId) {
-    var precio = precioEstimado();
-    var url = ML_BASE + "/sites/" + mlSite() + "/listing_prices?price=" + encodeURIComponent(precio) + "&category_id=" + encodeURIComponent(catId);
-    return fetch(url).then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
-      .then(function (arr) {
-        var out = {};
-        (Array.isArray(arr) ? arr : []).forEach(function (row) {
-          var det = row.sale_fee_details || {};
-          if (row.listing_type_id && det.percentage_fee != null) {
-            out[row.listing_type_id] = { pct: det.percentage_fee, fijo: det.fixed_fee || 0 };
-          }
-        });
-        if (!out.gold_special && !out.gold_pro) throw new Error("sin datos");
-        return out;
+  // Trae los montos de comisión (sale_fee_amount) para dos precios y despeja
+  // porcentaje + cargo fijo. Robusto: solo depende de sale_fee_amount, que
+  // siempre viene; si además hay sale_fee_details, lo usa como preferencia.
+  function feeAmounts(catId, price) {
+    var url = ML_BASE + "/sites/" + mlSite() + "/listing_prices?price=" +
+      encodeURIComponent(price) + "&category_id=" + encodeURIComponent(catId);
+    return fetch(url).then(function (r) {
+      if (!r.ok) { ultimoDebug = "GET " + url + " → HTTP " + r.status; throw new Error(ultimoDebug); }
+      return r.json();
+    }).then(function (data) {
+      var arr = Array.isArray(data) ? data : (data ? [data] : []);
+      var out = {};
+      arr.forEach(function (row) {
+        if (row && row.listing_type_id && typeof row.sale_fee_amount === "number") {
+          out[row.listing_type_id] = { amount: row.sale_fee_amount, det: row.sale_fee_details || null };
+        }
       });
+      if (!Object.keys(out).length) {
+        ultimoDebug = "GET " + url + " → respuesta sin sale_fee_amount: " + JSON.stringify(data).slice(0, 240);
+        throw new Error(ultimoDebug);
+      }
+      return out;
+    });
+  }
+
+  function traerComision(catId) {
+    var p1 = Math.max(3000, Math.round(precioEstimado()));
+    var p2 = p1 + 50000;
+    return Promise.all([feeAmounts(catId, p1), feeAmounts(catId, p2)]).then(function (res) {
+      var a = res[0], b = res[1], out = {};
+      ["gold_special", "gold_pro"].forEach(function (t) {
+        if (!a[t]) return;
+        var pct, fijo, det = a[t].det;
+        if (det && det.percentage_fee != null) {
+          pct = det.percentage_fee;
+          fijo = det.fixed_fee != null ? det.fixed_fee : 0;
+        } else if (b[t]) {
+          // Dos puntos: pendiente = %, intersección = cargo fijo.
+          pct = (b[t].amount - a[t].amount) / (p2 - p1) * 100;
+          fijo = a[t].amount - pct / 100 * p1;
+        } else {
+          pct = a[t].amount / p1 * 100; fijo = 0;
+        }
+        if (!isFinite(pct) || pct < 0) pct = 0;
+        if (!isFinite(fijo) || fijo < 0.5) fijo = 0;
+        out[t] = { pct: RML.redondear(pct, 2), fijo: RML.redondear(fijo, 2) };
+      });
+      if (!out.gold_special && !out.gold_pro) throw new Error("sin datos de comisión");
+      return out;
+    });
+  }
+
+  function catStatusError(msg) {
+    var el = byId("cat-status");
+    if (!el) return;
+    el.hidden = false;
+    el.className = "cat-status cat-status--warn";
+    el.innerHTML = escapeHtml(msg) +
+      (ultimoDebug ? ' <button type="button" class="link-btn" id="cat-debug-btn">ver detalle técnico</button>' +
+        '<span id="cat-debug" class="cat-debug" hidden></span>' : "");
+    var btn = byId("cat-debug-btn");
+    if (btn) btn.addEventListener("click", function () {
+      var d = byId("cat-debug");
+      if (d) { d.hidden = false; d.textContent = ultimoDebug; }
+    });
   }
 
   function mostrarCategoriaSeleccionada() {

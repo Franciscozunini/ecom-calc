@@ -120,7 +120,13 @@ Es un sitio estático, así que se sube tal cual:
 - Cálculo **en vivo** mientras se escribe (sin recargar). Botones "Recalcular" y "Limpiar todo".
 - Flujo en 3 pasos con acordeones ("Contame sobre tu producto" → "Agregá tus costos" → "Descubrí cuánto ganás").
 - Selector de **moneda** (ARS por defecto; arquitectura lista para USD, MXN, CLP, COP, BRL, EUR sin tocar el motor).
-- **Presets de referencia** cargados desde `data/presets.json`, claramente marcados como editables y no oficiales, con fecha.
+- **Selector de categoría del producto** con guía de dónde encontrar la comisión real
+  (no se inventa ningún porcentaje). La calculadora **recuerda en el navegador del
+  usuario** (localStorage) la comisión que carga para cada categoría, así la próxima
+  vez viene precargada con SU número real. Nada se envía a ningún servidor.
+- El dueño del sitio puede opcionalmente precargar valores de referencia por
+  categoría en `data/presets.json` (`comisionRefPct`), si tiene una fuente oficial
+  verificada; por defecto están en `null` para no mostrar datos inventados.
 
 **Resultados**
 - Resultado principal con máxima jerarquía: **ganancia neta por venta** y **margen neto**.

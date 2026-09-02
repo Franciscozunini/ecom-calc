@@ -1,37 +1,30 @@
 {
-  "_aviso": "VALORES DE REFERENCIA EDITABLES — NO son datos oficiales verificados. Las comisiones, impuestos y costos de Mercado Libre cambian por categoría, país, tipo de publicación y régimen fiscal. Verificá siempre los valores vigentes en tu cuenta antes de decidir. Podés sobrescribir cualquiera de estos valores en la calculadora.",
-  "version": 1,
+  "_aviso": "VALORES DE REFERENCIA EDITABLES — NO son datos oficiales verificados. Las comisiones, impuestos y costos de Mercado Libre cambian por categoría, país, tipo de publicación y régimen fiscal. Verificá siempre los valores vigentes en tu cuenta antes de decidir. Podés sobrescribir cualquier valor en la calculadora.",
+  "version": 2,
   "fecha_actualizacion": "2026-09-02",
   "moneda_defecto": "ARS",
-  "presets": [
-    {
-      "id": "vacio",
-      "nombre": "Empezar de cero",
-      "descripcion": "Cargá todos los valores manualmente.",
-      "oficial": false,
-      "valores": {
-        "comisionPct": "",
-        "cargoFijo": "",
-        "envio": "",
-        "impuestosPct": ""
-      }
-    },
-    {
-      "id": "referencia-comision",
-      "nombre": "Plantilla en blanco (solo estructura)",
-      "descripcion": "No trae ningún porcentaje cargado. Sirve para recordarte qué campos completar. Los números los ponés vos con los datos reales de tu cuenta.",
-      "oficial": false,
-      "valores": {
-        "comisionPct": "",
-        "cargoFijo": "",
-        "envio": "",
-        "impuestosPct": ""
-      }
-    }
+  "_como_completar_comisiones": "Los campos comisionRefPct y cargoFijoRef están en null a propósito: no incluimos porcentajes de comisión inventados. Si querés que una categoría venga precargada con un valor de referencia, completá comisionRefPct con el número que figure en la página oficial de costos de Mercado Libre (https://www.mercadolibre.com.ar/ayuda/Costos-de-vender-un-producto_870 o el simulador oficial), subí la fecha_actualizacion y dejá claro en la UI que es orientativo. Mientras estén en null, la calculadora igual recuerda el valor que cada usuario carga para cada categoría (guardado en su propio navegador).",
+  "categorias": [
+    { "id": "sin-cat", "nombre": "Elegí tu categoría…", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "electronica", "nombre": "Electrónica, audio y video", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "celulares", "nombre": "Celulares y teléfonos", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "computacion", "nombre": "Computación", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "indumentaria", "nombre": "Ropa, calzado y accesorios", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "hogar", "nombre": "Hogar, muebles y jardín", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "belleza", "nombre": "Belleza y cuidado personal", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "salud", "nombre": "Salud y equipamiento médico", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "deportes", "nombre": "Deportes y fitness", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "herramientas", "nombre": "Herramientas e industria", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "juguetes", "nombre": "Juguetes y juegos", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "bebes", "nombre": "Bebés", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "autos", "nombre": "Autos, motos y accesorios", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "alimentos", "nombre": "Alimentos y bebidas", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "libros", "nombre": "Libros, revistas y arte", "comisionRefPct": null, "cargoFijoRef": null },
+    { "id": "otra", "nombre": "Otra categoría", "comisionRefPct": null, "cargoFijoRef": null }
   ],
   "notas": [
-    "Este archivo está separado del motor de cálculo a propósito: podés editar los presets sin tocar la lógica.",
-    "Para agregar un preset con valores de referencia propios, añadí un objeto a 'presets' con sus 'valores' y subí la 'fecha_actualizacion'.",
-    "Marcá siempre 'oficial': false salvo que tengas una fuente verificada y asumas la responsabilidad de mantenerla."
+    "Este archivo está separado del motor de cálculo a propósito: podés editar categorías y valores sin tocar la lógica.",
+    "La calculadora guarda en el navegador de cada usuario la comisión que carga para cada categoría, así la próxima vez viene precargada con SU número real (nada se envía a ningún servidor).",
+    "Nunca presentes un valor como 'oficial' salvo que tengas una fuente verificada y asumas mantenerla."
   ]
 }

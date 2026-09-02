@@ -181,13 +181,17 @@
                 <svg class="acc-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
               </summary>
               <div class="acc-body">
-                <div class="preset-bar">
-                  <label for="preset">Valores de referencia</label>
-                  <select id="preset" name="preset" aria-describedby="preset-help"></select>
-                  <small id="preset-help" class="hint preset-hint">
-                    Referencia editable, <strong>no</strong> son datos oficiales. Actualizado:
-                    <span id="preset-fecha">—</span>. Cargá los números reales de tu cuenta.
-                  </small>
+                <div class="cat-bar">
+                  <label for="categoria">Categoría del producto</label>
+                  <select id="categoria" name="categoria" aria-describedby="cat-help"></select>
+                  <div id="cat-help" class="cat-help">
+                    <strong>¿No sabés cuánto te cobra Mercado Libre?</strong> El porcentaje cambia
+                    por categoría y por tipo de publicación (clásica o premium). Mirá el tuyo exacto
+                    en tu publicación, en la sección <em>«Costo de venta»</em>, o en el
+                    <a href="https://www.mercadolibre.com.ar/simulador-de-costos" target="_blank" rel="noopener noreferrer">simulador oficial de ML</a>.
+                    Cargalo una vez acá y lo <strong>recordamos para esa categoría</strong>.
+                  </div>
+                  <small id="cat-ref-note" class="hint cat-ref-note" hidden></small>
                 </div>
 
                 <div class="field-row">
@@ -198,6 +202,7 @@
                     </div>
                     <small class="hint">% sobre el precio. Varía por categoría.</small>
                     <small class="err" data-err="comisionPct" role="alert"></small>
+                    <small class="saved-note" id="comision-saved" role="status" hidden></small>
                   </div>
                   <div class="field">
                     <label for="cargoFijo">Cargo fijo de ML</label>

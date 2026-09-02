@@ -272,48 +272,139 @@
     });
   }
 
-  /* ---------- Presets (desde JSON, editable) ---------- */
-  function aplicarPresetsData(data) {
-    var sel = document.getElementById("preset");
-    if (!sel || !data) return;
+  /* ---------- Categorías + memoria por navegador ----------
+   * No inventamos comisiones. La categoría por sí sola no trae un número (los
+   * valores de referencia vienen en null en presets.json). Lo que sí hacemos:
+   * cuando el usuario carga SU comisión real para una categoría, la recordamos
+   * en su propio navegador (localStorage) y la próxima vez la precargamos.
+   */
+  var LS_KEY = "margenlibre:comision:";
+
+  function lsGet(catId) {
+    try { return JSON.parse(localStorage.getItem(LS_KEY + catId) || "null"); }
+    catch (_) { return null; }
+  }
+  function lsSet(catId, obj) {
+    try { localStorage.setItem(LS_KEY + catId, JSON.stringify(obj)); } catch (_) {}
+  }
+
+  function catActual() {
+    var sel = document.getElementById("categoria");
+    return sel ? sel.value : "";
+  }
+
+  function nombreCat(catId) {
+    if (!presetsData || !presetsData.categorias) return "esta categoría";
+    var c = presetsData.categorias.filter(function (x) { return x.id === catId; })[0];
+    return c ? c.nombre : "esta categoría";
+  }
+
+  function aplicarCategoriasData(data) {
     presetsData = data;
-    var fecha = document.getElementById("preset-fecha");
-    if (fecha && data.fecha_actualizacion) fecha.textContent = data.fecha_actualizacion;
-    (data.presets || []).forEach(function (p) {
+    var sel = document.getElementById("categoria");
+    if (!sel || !data || !data.categorias) return;
+    data.categorias.forEach(function (c) {
       var opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = p.nombre;
+      opt.value = c.id;
+      opt.textContent = c.nombre;
       sel.appendChild(opt);
     });
   }
 
-  function cargarPresets() {
-    var sel = document.getElementById("preset");
+  function refDeCategoria(catId) {
+    if (!presetsData || !presetsData.categorias) return null;
+    return presetsData.categorias.filter(function (x) { return x.id === catId; })[0] || null;
+  }
+
+  function onCategoriaChange() {
+    var catId = catActual();
+    var note = document.getElementById("cat-ref-note");
+    if (note) { note.hidden = true; note.textContent = ""; }
+    if (!catId || catId === "sin-cat") return;
+
+    // 1) ¿El usuario ya guardó su comisión para esta categoría? → precargar.
+    var guardado = lsGet(catId);
+    if (guardado && guardado.comisionPct != null && guardado.comisionPct !== "") {
+      setVal("comisionPct", guardado.comisionPct);
+      if (guardado.cargoFijo != null && guardado.cargoFijo !== "") setVal("cargoFijo", guardado.cargoFijo);
+      if (note) {
+        note.hidden = false;
+        note.innerHTML = "Usamos la comisión que guardaste para <strong>" +
+          escapeHtml(nombreCat(catId)) + "</strong> (" + escapeHtml(String(guardado.comisionPct)) +
+          " %). Editala si cambió.";
+      }
+      recalcular();
+      return;
+    }
+
+    // 2) ¿Hay un valor de REFERENCIA cargado por el dueño del sitio? (por defecto null)
+    var ref = refDeCategoria(catId);
+    if (ref && ref.comisionRefPct != null && ref.comisionRefPct !== "") {
+      setVal("comisionPct", ref.comisionRefPct);
+      if (ref.cargoFijoRef != null && ref.cargoFijoRef !== "") setVal("cargoFijo", ref.cargoFijoRef);
+      if (note) {
+        note.hidden = false;
+        note.innerHTML = "Valor <strong>orientativo</strong> (no oficial). Verificá el tuyo en tu publicación o en el simulador de ML.";
+      }
+      recalcular();
+      return;
+    }
+
+    // 3) No hay dato: guiamos (el bloque de ayuda ya está visible) y recordamos cuando lo cargue.
+    if (note) {
+      note.hidden = false;
+      note.innerHTML = "Cargá tu comisión de <strong>" + escapeHtml(nombreCat(catId)) +
+        "</strong> abajo y la recordamos para la próxima.";
+    }
+  }
+
+  function setVal(id, v) {
+    var el = document.getElementById(id);
+    if (el) el.value = v;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // Cuando el usuario edita la comisión (o el cargo fijo) y hay categoría elegida,
+  // guardamos su valor para esa categoría en su navegador.
+  function recordarComision() {
+    var catId = catActual();
+    if (!catId || catId === "sin-cat") return;
+    var comision = (document.getElementById("comisionPct") || {}).value;
+    var cargo = (document.getElementById("cargoFijo") || {}).value;
+    if (String(comision || "").trim() === "") return;
+    lsSet(catId, { comisionPct: comision, cargoFijo: cargo });
+    var saved = document.getElementById("comision-saved");
+    if (saved) {
+      saved.hidden = false;
+      saved.textContent = "✓ Guardado para " + nombreCat(catId) + " en este navegador.";
+      clearTimeout(recordarComision._t);
+      recordarComision._t = setTimeout(function () { saved.hidden = true; }, 2600);
+    }
+  }
+
+  function cargarCategorias() {
+    var sel = document.getElementById("categoria");
     if (!sel) return;
-    // Versión de un solo archivo (offline / file://): los presets vienen inline.
-    if (window.__PRESETS__) { aplicarPresetsData(window.__PRESETS__); }
+    if (window.__PRESETS__) { aplicarCategoriasData(window.__PRESETS__); }
     else {
       fetch(BRAND.presetsUrl || "data/presets.json", { cache: "no-store" })
         .then(function (r) { return r.json(); })
-        .then(aplicarPresetsData)
+        .then(aplicarCategoriasData)
         .catch(function () {
-          // Sin presets (por ejemplo abierto como archivo local sin servidor): no
-          // pasa nada, la calculadora funciona igual. Ocultamos el selector.
-          var bar = sel.closest(".preset-bar");
+          var bar = sel.closest(".cat-bar");
           if (bar) bar.style.display = "none";
         });
     }
+    sel.addEventListener("change", onCategoriaChange);
 
-    sel.addEventListener("change", function () {
-      if (!presetsData) return;
-      var p = (presetsData.presets || []).filter(function (x) { return x.id === sel.value; })[0];
-      if (!p || !p.valores) return;
-      Object.keys(p.valores).forEach(function (campo) {
-        var el = document.getElementById(campo);
-        if (el) el.value = p.valores[campo];
-      });
-      recalcular();
-    });
+    var comEl = document.getElementById("comisionPct");
+    var cargoEl = document.getElementById("cargoFijo");
+    if (comEl) comEl.addEventListener("change", recordarComision);
+    if (cargoEl) cargoEl.addEventListener("change", recordarComision);
   }
 
   /* ---------- Limpiar / reset ---------- */
@@ -323,8 +414,12 @@
       var el = document.getElementById(c);
       if (el) el.value = init[c] !== undefined ? init[c] : "";
     });
-    var preset = document.getElementById("preset");
-    if (preset) preset.selectedIndex = 0;
+    var cat = document.getElementById("categoria");
+    if (cat) cat.selectedIndex = 0;
+    var catNote = document.getElementById("cat-ref-note");
+    if (catNote) catNote.hidden = true;
+    var saved = document.getElementById("comision-saved");
+    if (saved) saved.hidden = true;
     limpiarErrores();
     mostrarVacio();
     var precio = document.getElementById("precioVenta");
@@ -348,7 +443,7 @@
 
     safe(aplicarIniciales, "aplicarIniciales");
     safe(poblarMonedas, "poblarMonedas");
-    safe(cargarPresets, "cargarPresets");
+    safe(cargarCategorias, "cargarCategorias");
 
     // Recalcular en vivo
     CAMPOS.forEach(function (c) {

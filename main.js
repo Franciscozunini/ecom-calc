@@ -1,7 +1,7 @@
 /* =============================================================================
- * main.js — UI de la calculadora. Solo cablea el DOM con el motor (calculo.js).
- * Toda la matemática vive en calculo.js; acá solo leemos inputs, pedimos el
- * cálculo y pintamos resultados. IIFE, sin dependencias externas.
+ * main.js — UI de "Decime cuánto querés ganar y te digo a cuánto vender".
+ * Solo cablea el DOM con el motor (calculo.js). Toda la matemática vive en
+ * calculo.js (RML.calcularObjetivo). IIFE, sin dependencias externas.
  * ============================================================================= */
 (function () {
   "use strict";
@@ -9,32 +9,41 @@
   var RML = window.RentabilidadML;
   var BRAND = window.__BRAND__ || {};
 
-  var $ = function (sel, scope) { return (scope || document).querySelector(sel); };
   var $$ = function (sel, scope) { return Array.prototype.slice.call((scope || document).querySelectorAll(sel)); };
   function safe(fn, name) { try { fn(); } catch (e) { console.warn("[" + name + "]", e); } }
+  function byId(id) { return document.getElementById(id); }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
 
+  // Campos de valor del formulario (para leer, limpiar y detectar "prístino").
   var CAMPOS = [
-    "precioVenta", "costoProducto", "comisionPct", "cargoFijo", "envio",
-    "impuestosPct", "publicidad", "otrosCostos", "unidades", "margenObjetivoPct"
+    "nombreProducto", "costoProducto", "gananciaObjetivo", "margenObjetivoPct",
+    "comisionPct", "cargoFijo", "envio", "impuestosPct", "publicidad",
+    "otrosCostos", "precioReferencia", "inversionInicial"
   ];
+  // Campos numéricos que definen si el formulario está "vacío/prístino".
+  var CAMPOS_VALOR = ["costoProducto", "gananciaObjetivo", "margenObjetivoPct"];
 
   var monedaActual = BRAND.monedaDefecto || "ARS";
   var presetsData = null;
+  var modoObjetivo = "ganancia"; // "ganancia" | "margen"
 
   function fMoneda(n) { return RML.formato.moneda(n, monedaActual); }
   function fPct(n, d) { return RML.formato.porcentaje(n, d === undefined ? 1 : d); }
 
-  /* ---------- Lectura del formulario ---------- */
+  /* ---------- Lectura ---------- */
   function leerEntrada() {
     var e = {};
-    CAMPOS.forEach(function (c) {
-      var el = document.getElementById(c);
-      e[c] = el ? el.value : "";
-    });
+    CAMPOS.forEach(function (c) { var el = byId(c); e[c] = el ? el.value : ""; });
+    e.modoObjetivo = modoObjetivo;
+    e.canal = (byId("canal") || {}).value || "mercadolibre";
     return e;
   }
 
-  /* ---------- Errores por campo ---------- */
+  /* ---------- Errores ---------- */
   function limpiarErrores() {
     $$(".err").forEach(function (el) { el.textContent = ""; });
     $$(".field").forEach(function (el) { el.classList.remove("field--error"); });
@@ -51,188 +60,168 @@
     });
   }
 
-  /* ---------- Render de resultados ---------- */
-  var emptyBox = null, fullBox = null;
-
-  function mostrarVacio() {
-    if (emptyBox) emptyBox.hidden = false;
-    if (fullBox) fullBox.hidden = true;
+  /* ---------- Estados de la vista ---------- */
+  var emptyBox, fullBox, impBox;
+  function mostrar(estado) {
+    if (emptyBox) emptyBox.hidden = estado !== "vacio";
+    if (impBox) impBox.hidden = estado !== "imposible";
+    if (fullBox) fullBox.hidden = estado !== "full";
   }
 
-  function filaDesglose(label, valor, opts) {
-    opts = opts || {};
-    var cls = "bd-row" + (opts.strong ? " bd-row--strong" : "") + (opts.neg ? " bd-row--neg" : "");
-    return '<li class="' + cls + '"><span class="bd-label">' + label +
-      '</span><span class="bd-value">' + valor + "</span></li>";
-  }
-
+  /* ---------- Render ---------- */
   function render(res) {
-    var d = res.resultado;
+    var d = res.resultado, e = res.entrada;
 
-    if (emptyBox) emptyBox.hidden = true;
-    if (fullBox) fullBox.hidden = false;
+    if (d.imposible) {
+      byId("r-imposible").textContent = d.motivoImposible;
+      mostrar("imposible");
+      return;
+    }
+    mostrar("full");
 
-    // --- Semáforo + principal ---
-    var hero = document.getElementById("hero-result");
+    var prod = d.nombreProducto ? (" de tu " + d.nombreProducto) : "";
+    // Línea de objetivo
+    var objTxt = (d.modoObjetivo === "ganancia")
+      ? ("Para ganar " + fMoneda(d.gananciaObjetivo) + " por unidad" + prod + "…")
+      : ("Para un margen de " + fPct(e.margenObjetivoPct, 0) + prod + "…");
+    byId("r-obj-line").textContent = objTxt;
+
+    // Precio grande
+    byId("r-precio").textContent = fMoneda(d.precio);
+    byId("r-precio-sub").innerHTML = "Con este precio, después de tus costos, tu ganancia sería de aproximadamente <strong>" +
+      fMoneda(d.gananciaUnit) + "</strong> por unidad.";
+
+    // Semáforo
+    var hero = byId("hero-result");
     hero.setAttribute("data-estado", d.semaforo.estado);
-    document.getElementById("semaforo-label").textContent = d.semaforo.etiqueta;
+    byId("semaforo-label").textContent = d.semaforo.etiqueta;
 
-    var gu = document.getElementById("r-gananciaUnit");
-    gu.textContent = fMoneda(d.gananciaUnit);
-    gu.classList.toggle("is-neg", d.gananciaUnit < 0);
+    // KPIs
+    byId("r-ganancia").textContent = fMoneda(d.gananciaUnit);
+    byId("r-margen").textContent = fPct(d.margenPct);
+    byId("r-costos").textContent = fMoneda(d.costosTotales);
+    byId("r-roi").textContent = fPct(d.roiPct);
 
-    var mp = document.getElementById("r-margenPct");
-    mp.textContent = fPct(d.margenPct);
-    mp.classList.toggle("is-neg", d.margenPct < 0);
+    // Tabla de precios
+    var filasP = d.escenariosPrecio.map(function (row) {
+      return '<tr' + (row.objetivo ? ' class="row-obj"' : '') + '>' +
+        '<td>' + fMoneda(row.precio) + (row.objetivo ? ' <span class="tag-obj">objetivo</span>' : '') + '</td>' +
+        '<td class="' + (row.ganancia < 0 ? 'neg' : '') + '">' + fMoneda(row.ganancia) + '</td>' +
+        '<td>' + fPct(row.margen) + '</td></tr>';
+    }).join("");
+    byId("tbl-precios").innerHTML = filasP;
 
-    // --- Diferencial publicidad ---
-    document.getElementById("r-maxAdsVenta").textContent =
-      d.maxPublicidadPorVenta < 0 ? fMoneda(0) : fMoneda(d.maxPublicidadPorVenta);
-    document.getElementById("r-acos").textContent =
-      d.acosEquilibrioPct <= 0 ? "0 %" : fPct(d.acosEquilibrioPct);
-
-    var difEl = document.getElementById("r-difAds");
-    var difLabel = document.getElementById("r-difAds-label");
-    var adsMsg = document.getElementById("ads-msg");
-    var adsBox = document.getElementById("ads-box");
-
-    if (d.deficitarioSinPublicidad) {
-      adsBox.setAttribute("data-tone", "danger");
-      difLabel.textContent = "Pérdida base (sin ads)";
-      difEl.textContent = fMoneda(d.perdidaBaseSinPublicidad);
-      difEl.classList.add("is-neg");
-      adsMsg.innerHTML = "⚠️ <strong>Tu producto ya es deficitario antes de invertir en publicidad.</strong> " +
-        "Con los costos actuales perdés " + fMoneda(Math.abs(d.perdidaBaseSinPublicidad)) +
-        " en el lote incluso gastando $0 en anuncios. Revisá precio y costos antes de pautar.";
+    // Costo máximo del proveedor
+    byId("costomax-ref").textContent = "A un precio de venta de " + fMoneda(d.precioReferencia) + ":";
+    var costomaxEl = byId("r-costomax");
+    if (d.costoMaximoPosible) {
+      costomaxEl.textContent = fMoneda(d.costoMaximo);
+      costomaxEl.classList.remove("neg");
+      byId("costomax-msg").innerHTML = "Ese es el <strong>máximo que podés pagarle al proveedor</strong> por unidad y seguir alcanzando tu objetivo. Si te cuesta más, no te deja la ganancia que buscás.";
     } else {
-      var sobreGasto = d.diferenciaPublicidad < 0;
-      adsBox.setAttribute("data-tone", sobreGasto ? "warn" : "ok");
-      difEl.classList.remove("is-neg");
-      if (sobreGasto) {
-        difLabel.textContent = "Te estás pasando por";
-        difEl.textContent = fMoneda(Math.abs(d.diferenciaPublicidad));
-        difEl.classList.add("is-neg");
-        adsMsg.innerHTML = "⚠️ Estás gastando <strong>" + fMoneda(Math.abs(d.diferenciaPublicidad)) +
-          "</strong> más de lo que tu producto aguanta. Bajá la inversión en ads o subí el precio para no vender a pérdida.";
-      } else {
-        difLabel.textContent = "Margen libre para ads";
-        difEl.textContent = fMoneda(d.diferenciaPublicidad);
-        adsMsg.innerHTML = "✅ Podés gastar hasta <strong>" + fMoneda(d.maxPublicidadPorVenta) +
-          "</strong> por venta en publicidad antes de llegar a $0 de ganancia. " +
-          "Hoy tenés " + fMoneda(d.diferenciaPublicidad) + " de margen libre en el lote.";
-      }
+      costomaxEl.textContent = "No alcanza";
+      costomaxEl.classList.add("neg");
+      byId("costomax-msg").innerHTML = "A ese precio de venta no llegás a tu objetivo ni pagando $0 por el producto. Subí el precio o bajá tu ganancia objetivo.";
     }
 
-    // --- Desglose completo ---
-    var u = d.unidades;
-    var rows = [];
-    rows.push(filaDesglose("Ingresos (lote de " + u + ")", fMoneda(d.ingresosLote)));
-    rows.push(filaDesglose("Costo del producto", "− " + fMoneda(d.costoProductoLote), { neg: true }));
-    rows.push(filaDesglose("Comisión Mercado Libre", "− " + fMoneda(d.comisionLote), { neg: true }));
-    rows.push(filaDesglose("Cargo fijo", "− " + fMoneda(d.cargoFijoLote), { neg: true }));
-    rows.push(filaDesglose("Envío", "− " + fMoneda(d.envioLote), { neg: true }));
-    rows.push(filaDesglose("Impuestos", "− " + fMoneda(d.impuestosLote), { neg: true }));
-    rows.push(filaDesglose("Publicidad", "− " + fMoneda(d.publicidad), { neg: true }));
-    rows.push(filaDesglose("Otros costos", "− " + fMoneda(d.otrosCostos), { neg: true }));
-    rows.push(filaDesglose("Costo total del lote", fMoneda(d.costosLoteTotal), { strong: true }));
-    rows.push(filaDesglose("Ganancia neta por venta", fMoneda(d.gananciaUnit), { strong: true }));
-    rows.push(filaDesglose("Ganancia del lote (" + u + " u.)", fMoneda(d.gananciaLote), { strong: true }));
-    rows.push(filaDesglose("Margen neto", fPct(d.margenPct)));
-    rows.push(filaDesglose("ROI", fPct(d.roiPct)));
-    rows.push(filaDesglose("Punto de equilibrio",
-      d.puntoEquilibrio === null ? "No alcanzable" : (d.puntoEquilibrio + " u.")));
-    if (res.entrada.tieneMargenObjetivo) {
-      rows.push(filaDesglose("Precio mínimo (margen " + fPct(res.entrada.margenObjetivoPct, 0) + ")",
-        d.precioMinimo === null ? "No alcanzable" : fMoneda(d.precioMinimo)));
+    // Publicidad
+    byId("r-pubactual").textContent = fMoneda(d.publicidadActual);
+    byId("r-pubadic").textContent = fMoneda(Math.max(0, d.publicidadAdicional));
+    byId("r-maxpub").textContent = fMoneda(Math.max(0, d.maxPublicidad));
+    byId("r-acos").textContent = d.acosEquilibrioPct <= 0 ? "0 %" : fPct(d.acosEquilibrioPct);
+    var pubMsg = byId("pub-msg");
+    if (d.publicidadAdicional > 0) {
+      pubMsg.innerHTML = "Ya gastás <strong>" + fMoneda(d.publicidadActual) + "</strong> por venta. " +
+        "Te quedan <strong>" + fMoneda(d.publicidadAdicional) + "</strong> adicionales antes de llegar a $0 de ganancia " +
+        "(máximo total <strong>" + fMoneda(d.maxPublicidad) + "</strong> por venta).";
+      pubMsg.classList.remove("msg-warn");
+    } else {
+      pubMsg.innerHTML = "⚠️ Ya estás en el límite de publicidad para este precio. Cualquier gasto extra en ads te deja por debajo de tu objetivo.";
+      pubMsg.classList.add("msg-warn");
     }
-    rows.push(filaDesglose("Máx. publicidad sin pérdida (lote)",
-      d.maxPublicidadLote < 0 ? fMoneda(0) : fMoneda(d.maxPublicidadLote)));
-    document.getElementById("breakdown-list").innerHTML = rows.join("");
 
-    // --- Cómo se calculó ---
+    // Punto de equilibrio (inversión)
+    var eqBox = byId("equilibrio-box");
+    if (d.unidadesEquilibrio != null) {
+      eqBox.hidden = false;
+      byId("r-unidades").textContent = d.unidadesEquilibrio + " u.";
+      byId("equilibrio-msg").innerHTML = "Con una inversión de <strong>" + fMoneda(d.inversionInicial) +
+        "</strong> y una ganancia de <strong>" + fMoneda(d.gananciaUnit) + "</strong> por unidad, " +
+        "recuperás tu inversión vendiendo <strong>" + d.unidadesEquilibrio + " unidades</strong>. Desde ahí, todo es ganancia.";
+    } else {
+      eqBox.hidden = true;
+    }
+
+    // Decisión + escenarios de ganancia
+    byId("r-precio-objetivo").textContent = fMoneda(d.precio);
+    byId("r-decision-sub").innerHTML = (d.modoObjetivo === "ganancia")
+      ? ("Con este precio alcanzás tu objetivo de " + fMoneda(d.gananciaObjetivo) + " de ganancia por unidad.")
+      : ("Con este precio alcanzás tu margen objetivo de " + fPct(e.margenObjetivoPct, 0) + ".");
+
+    var escGan = byId("escenarios-ganancia");
+    if (d.escenariosGanancia) {
+      escGan.hidden = false;
+      byId("tbl-ganancias").innerHTML = d.escenariosGanancia.map(function (row) {
+        return '<tr' + (row.objetivo ? ' class="row-obj"' : '') + '>' +
+          '<td>' + fMoneda(row.ganancia) + '</td>' +
+          '<td>' + (row.precio == null ? "—" : fMoneda(row.precio)) +
+          (row.objetivo ? ' <span class="tag-obj">objetivo</span>' : '') + '</td></tr>';
+      }).join("");
+    } else {
+      escGan.hidden = true;
+    }
+
     renderComoSeCalculo(res);
   }
 
-  function paso(txt) { return '<div class="cs-step">' + txt + "</div>"; }
-
   function renderComoSeCalculo(res) {
     var e = res.entrada, d = res.resultado;
-    var m = function (n) { return fMoneda(n); };
-    var comisionUnit = e.precioVenta * (e.comisionPct / 100);
-    var impuestosUnit = e.precioVenta * (e.impuestosPct / 100);
+    var m = fMoneda;
+    var fijos = e.costoProducto + e.cargoFijo + e.envio + e.publicidad + e.otrosCostos;
+    var kPct = e.comisionPct + e.impuestosPct;
     var html = [];
+    html.push('<p class="cs-intro">Cálculos aplicados a tus números:</p>');
 
-    html.push('<p class="cs-intro">Estos son los cálculos aplicados a los valores que ingresaste:</p>');
+    html.push('<div class="cs-step"><strong>Costos por unidad (sin %)</strong><br>' +
+      m(e.costoProducto) + " (producto) + " + m(e.cargoFijo) + " (cargo fijo) + " + m(e.envio) +
+      " (envío) + " + m(e.publicidad) + " (publicidad) + " + m(e.otrosCostos) + " (otros) = <strong>" +
+      m(fijos) + "</strong></div>");
 
-    html.push(paso("<strong>Contribución por unidad</strong><br>" +
-      m(e.precioVenta) + " (precio) − " + m(e.costoProducto) + " (producto) − " +
-      m(comisionUnit) + " (comisión " + fPct(e.comisionPct, 1) + ") − " +
-      m(e.cargoFijo) + " (cargo fijo) − " + m(e.envio) + " (envío) − " +
-      m(impuestosUnit) + " (impuestos " + fPct(e.impuestosPct, 1) + ") = <strong>" +
-      m(d.contribucionUnit) + "</strong>"));
-
-    html.push(paso("<strong>Ganancia del lote</strong> (" + e.unidades + " unidades)<br>" +
-      m(d.contribucionUnit) + " × " + e.unidades + " − " + m(d.costosLoteFijos) +
-      " (publicidad + otros) = <strong>" + m(d.gananciaLote) + "</strong>"));
-
-    html.push(paso("<strong>Ganancia neta por venta</strong><br>" +
-      m(d.gananciaLote) + " ÷ " + e.unidades + " = <strong>" + m(d.gananciaUnit) + "</strong>"));
-
-    html.push(paso("<strong>Margen neto</strong><br>" +
-      m(d.gananciaLote) + " ÷ " + m(d.ingresosLote) + " × 100 = <strong>" + fPct(d.margenPct) + "</strong>"));
-
-    html.push(paso("<strong>ROI</strong><br>" +
-      m(d.gananciaLote) + " ÷ " + m(d.costosLoteTotal) + " × 100 = <strong>" + fPct(d.roiPct) + "</strong>"));
-
-    if (d.puntoEquilibrio !== null) {
-      html.push(paso("<strong>Punto de equilibrio</strong><br>" +
-        m(d.costosLoteFijos) + " (costos de lote) ÷ " + m(d.contribucionUnit) +
-        " (contribución) redondeado hacia arriba = <strong>" + d.puntoEquilibrio + " unidades</strong>"));
+    if (d.modoObjetivo === "ganancia") {
+      html.push('<div class="cs-step"><strong>Precio para tu objetivo</strong><br>(' +
+        m(d.gananciaObjetivo) + " objetivo + " + m(fijos) + " costos) ÷ (1 − " + fPct(kPct, 1) +
+        ") = " + m(d.precioExacto) + " → redondeado a <strong>" + m(d.precio) + "</strong></div>");
     } else {
-      html.push(paso("<strong>Punto de equilibrio</strong><br>La contribución por unidad no es positiva: vendiendo más no se recuperan los costos."));
+      html.push('<div class="cs-step"><strong>Precio para tu margen</strong><br>' + m(fijos) +
+        " ÷ (1 − " + fPct(kPct, 1) + " − " + fPct(e.margenObjetivoPct, 1) + ") = " + m(d.precioExacto) +
+        " → redondeado a <strong>" + m(d.precio) + "</strong></div>");
     }
 
-    html.push(paso("<strong>Máximo gasto en publicidad sin pérdida</strong><br>" +
-      m(d.contribucionUnit) + " × " + e.unidades + " − " + m(e.otrosCostos) + " (otros) = <strong>" +
-      m(d.maxPublicidadLote) + "</strong> en el lote (" + m(d.maxPublicidadPorVenta) + " por venta)"));
+    html.push('<div class="cs-step"><strong>Ganancia real a ese precio</strong><br>' + m(d.precio) +
+      " − costos − comisión (" + fPct(e.comisionPct, 1) + ") − impuestos (" + fPct(e.impuestosPct, 1) +
+      ") = <strong>" + m(d.gananciaUnit) + "</strong> (nunca menos que tu objetivo)</div>");
 
-    html.push(paso("<strong>ACOS de equilibrio</strong><br>" +
-      m(d.maxPublicidadPorVenta) + " ÷ " + m(e.precioVenta) + " × 100 = <strong>" +
-      (d.acosEquilibrioPct <= 0 ? "0 %" : fPct(d.acosEquilibrioPct)) + "</strong>"));
+    html.push('<div class="cs-step"><strong>Costo máximo del proveedor</strong><br>' + m(d.precioReferencia) +
+      " × (1 − " + fPct(kPct, 1) + ") − ganancia objetivo − costos fijos = <strong>" +
+      (d.costoMaximoPosible ? m(d.costoMaximo) : "no alcanza") + "</strong></div>");
 
-    if (res.entrada.tieneMargenObjetivo) {
-      if (d.precioMinimo !== null) {
-        html.push(paso("<strong>Precio mínimo para margen " + fPct(e.margenObjetivoPct, 0) + "</strong><br>" +
-          "Precio necesario para que la ganancia sea el " + fPct(e.margenObjetivoPct, 0) +
-          " del precio = <strong>" + m(d.precioMinimo) + "</strong>"));
-      } else {
-        html.push(paso("<strong>Precio mínimo para margen " + fPct(e.margenObjetivoPct, 0) + "</strong><br>" +
-          "No es alcanzable: la comisión y los impuestos ya se llevan más margen que el objetivo."));
-      }
-    }
+    html.push('<div class="cs-step"><strong>Máximo de publicidad por venta</strong><br>ganancia antes de ads = <strong>' +
+      m(d.maxPublicidad) + "</strong> · ACOS de equilibrio = <strong>" +
+      (d.acosEquilibrioPct <= 0 ? "0 %" : fPct(d.acosEquilibrioPct)) + "</strong></div>");
 
-    document.getElementById("calc-steps").innerHTML = html.join("");
+    byId("calc-steps").innerHTML = html.join("");
   }
 
   /* ---------- Recalcular ---------- */
   function recalcular() {
     var entrada = leerEntrada();
-    var res = RML.calcular(entrada);
+    var res = RML.calcularObjetivo(entrada);
 
     if (!res.valido) {
-      // Formulario prístino (solo unidades con su valor por defecto): no mostramos
-      // errores todavía, solo el estado vacío. Nada de regañar antes de interactuar.
-      var pristino = CAMPOS.every(function (c) {
-        return String(entrada[c] || "").trim() === "" || c === "unidades";
-      });
-      if (pristino) {
-        limpiarErrores();
-        mostrarVacio();
-        return;
-      }
+      var pristino = CAMPOS_VALOR.every(function (c) { return String(entrada[c] || "").trim() === ""; });
+      if (pristino) { limpiarErrores(); mostrar("vacio"); return; }
       pintarErrores(res.errores);
-      // Si hay un resultado previo visible lo mantenemos; si no, estado vacío.
-      if (!(fullBox && !fullBox.hidden)) mostrarVacio();
+      if (!(fullBox && !fullBox.hidden)) mostrar("vacio");
       return;
     }
     limpiarErrores();
@@ -245,235 +234,198 @@
     debounceTimer = setTimeout(recalcular, 140);
   }
 
+  /* ---------- Modo objetivo (ganancia $ / margen %) ---------- */
+  function toggleModo() {
+    modoObjetivo = modoObjetivo === "ganancia" ? "margen" : "ganancia";
+    var esGanancia = modoObjetivo === "ganancia";
+    byId("wrap-ganancia").hidden = !esGanancia;
+    byId("wrap-margen").hidden = esGanancia;
+    byId("objetivo-label").innerHTML = esGanancia
+      ? '¿Cuánto querés ganar por unidad? <span class="req">*</span>'
+      : '¿Qué margen querés? <span class="req">*</span>';
+    byId("objetivo-hint").textContent = esGanancia
+      ? "Tu objetivo de ganancia en pesos por cada venta."
+      : "Tu objetivo de margen, como % del precio de venta.";
+    var btn = byId("modo-toggle");
+    btn.textContent = esGanancia ? "Usar % de margen" : "Usar ganancia en $";
+    btn.setAttribute("aria-pressed", String(!esGanancia));
+    limpiarErrores();
+    recalcular();
+  }
+
+  /* ---------- Canal ---------- */
+  function onCanalChange() {
+    var canal = (byId("canal") || {}).value;
+    var esML = canal === "mercadolibre";
+    var catBar = byId("cat-bar");
+    if (catBar) catBar.style.display = esML ? "" : "none";
+    var label = byId("comision-label");
+    if (label) {
+      label.textContent = esML ? "Comisión de Mercado Libre"
+        : (canal === "redes" ? "Comisión / recargo (si hay)" : "Comisión de la plataforma");
+    }
+    recalcular();
+  }
+
   /* ---------- Moneda ---------- */
   function poblarMonedas() {
-    var sel = document.getElementById("moneda");
+    var sel = byId("moneda");
     if (!sel) return;
     Object.keys(RML.MONEDAS).forEach(function (cod) {
       var m = RML.MONEDAS[cod];
       var opt = document.createElement("option");
-      opt.value = cod;
-      opt.textContent = cod + " · " + m.nombre;
+      opt.value = cod; opt.textContent = cod + " · " + m.nombre;
       if (cod === monedaActual) opt.selected = true;
       sel.appendChild(opt);
     });
     sel.addEventListener("change", function () {
-      monedaActual = sel.value;
-      actualizarSimbolos();
-      recalcular();
+      monedaActual = sel.value; actualizarSimbolos(); recalcular();
     });
     actualizarSimbolos();
   }
-
   function actualizarSimbolos() {
     var sym = (RML.MONEDAS[monedaActual] || {}).simbolo || "$";
-    $$(".input-money").forEach(function (el) {
-      el.setAttribute("data-sym", sym);
-    });
+    $$(".input-money").forEach(function (el) { el.setAttribute("data-sym", sym); });
   }
 
-  /* ---------- Categorías + memoria por navegador ----------
-   * No inventamos comisiones. La categoría por sí sola no trae un número (los
-   * valores de referencia vienen en null en presets.json). Lo que sí hacemos:
-   * cuando el usuario carga SU comisión real para una categoría, la recordamos
-   * en su propio navegador (localStorage) y la próxima vez la precargamos.
-   */
+  /* ---------- Categorías + memoria por navegador ---------- */
   var LS_KEY = "margenlibre:comision:";
-
-  function lsGet(catId) {
-    try { return JSON.parse(localStorage.getItem(LS_KEY + catId) || "null"); }
-    catch (_) { return null; }
-  }
-  function lsSet(catId, obj) {
-    try { localStorage.setItem(LS_KEY + catId, JSON.stringify(obj)); } catch (_) {}
-  }
-
-  function catActual() {
-    var sel = document.getElementById("categoria");
-    return sel ? sel.value : "";
-  }
-
-  function nombreCat(catId) {
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(LS_KEY + k) || "null"); } catch (_) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(LS_KEY + k, JSON.stringify(v)); } catch (_) {} }
+  function catActual() { var s = byId("categoria"); return s ? s.value : ""; }
+  function nombreCat(id) {
     if (!presetsData || !presetsData.categorias) return "esta categoría";
-    var c = presetsData.categorias.filter(function (x) { return x.id === catId; })[0];
+    var c = presetsData.categorias.filter(function (x) { return x.id === id; })[0];
     return c ? c.nombre : "esta categoría";
   }
+  function refCat(id) {
+    if (!presetsData || !presetsData.categorias) return null;
+    return presetsData.categorias.filter(function (x) { return x.id === id; })[0] || null;
+  }
+  function setVal(id, v) { var el = byId(id); if (el) el.value = v; }
 
-  function aplicarCategoriasData(data) {
+  function aplicarCategorias(data) {
     presetsData = data;
-    var sel = document.getElementById("categoria");
+    var sel = byId("categoria");
     if (!sel || !data || !data.categorias) return;
     data.categorias.forEach(function (c) {
       var opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.nombre;
+      opt.value = c.id; opt.textContent = c.nombre;
       sel.appendChild(opt);
     });
   }
 
-  function refDeCategoria(catId) {
-    if (!presetsData || !presetsData.categorias) return null;
-    return presetsData.categorias.filter(function (x) { return x.id === catId; })[0] || null;
-  }
-
   function onCategoriaChange() {
-    var catId = catActual();
-    var note = document.getElementById("cat-ref-note");
+    var id = catActual();
+    var note = byId("cat-ref-note");
     if (note) { note.hidden = true; note.textContent = ""; }
-    if (!catId || catId === "sin-cat") return;
+    if (!id || id === "sin-cat") return;
 
-    // 1) ¿El usuario ya guardó su comisión para esta categoría? → precargar.
-    var guardado = lsGet(catId);
+    var guardado = lsGet(id);
     if (guardado && guardado.comisionPct != null && guardado.comisionPct !== "") {
       setVal("comisionPct", guardado.comisionPct);
       if (guardado.cargoFijo != null && guardado.cargoFijo !== "") setVal("cargoFijo", guardado.cargoFijo);
-      if (note) {
-        note.hidden = false;
-        note.innerHTML = "Usamos la comisión que guardaste para <strong>" +
-          escapeHtml(nombreCat(catId)) + "</strong> (" + escapeHtml(String(guardado.comisionPct)) +
-          " %). Editala si cambió.";
-      }
-      recalcular();
-      return;
+      if (note) { note.hidden = false; note.innerHTML = "Usamos la comisión que guardaste para <strong>" +
+        escapeHtml(nombreCat(id)) + "</strong> (" + escapeHtml(String(guardado.comisionPct)) + " %). Editala si cambió."; }
+      recalcular(); return;
     }
-
-    // 2) ¿Hay un valor de REFERENCIA cargado por el dueño del sitio? (por defecto null)
-    var ref = refDeCategoria(catId);
+    var ref = refCat(id);
     if (ref && ref.comisionRefPct != null && ref.comisionRefPct !== "") {
       setVal("comisionPct", ref.comisionRefPct);
       if (ref.cargoFijoRef != null && ref.cargoFijoRef !== "") setVal("cargoFijo", ref.cargoFijoRef);
-      if (note) {
-        note.hidden = false;
-        note.innerHTML = "Valor <strong>orientativo</strong> (no oficial). Verificá el tuyo en tu publicación o en el simulador de ML.";
-      }
-      recalcular();
-      return;
+      if (note) { note.hidden = false; note.innerHTML = "Valor <strong>orientativo</strong> (no oficial). Verificá el tuyo en tu publicación o en el simulador de ML."; }
+      recalcular(); return;
     }
-
-    // 3) No hay dato: guiamos (el bloque de ayuda ya está visible) y recordamos cuando lo cargue.
-    if (note) {
-      note.hidden = false;
-      note.innerHTML = "Cargá tu comisión de <strong>" + escapeHtml(nombreCat(catId)) +
-        "</strong> abajo y la recordamos para la próxima.";
-    }
+    if (note) { note.hidden = false; note.innerHTML = "Cargá tu comisión de <strong>" +
+      escapeHtml(nombreCat(id)) + "</strong> abajo y la recordamos para la próxima."; }
   }
 
-  function setVal(id, v) {
-    var el = document.getElementById(id);
-    if (el) el.value = v;
-  }
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-
-  // Cuando el usuario edita la comisión (o el cargo fijo) y hay categoría elegida,
-  // guardamos su valor para esa categoría en su navegador.
   function recordarComision() {
-    var catId = catActual();
-    if (!catId || catId === "sin-cat") return;
-    var comision = (document.getElementById("comisionPct") || {}).value;
-    var cargo = (document.getElementById("cargoFijo") || {}).value;
+    var id = catActual();
+    if (!id || id === "sin-cat") return;
+    var comision = (byId("comisionPct") || {}).value;
+    var cargo = (byId("cargoFijo") || {}).value;
     if (String(comision || "").trim() === "") return;
-    lsSet(catId, { comisionPct: comision, cargoFijo: cargo });
-    var saved = document.getElementById("comision-saved");
+    lsSet(id, { comisionPct: comision, cargoFijo: cargo });
+    var saved = byId("comision-saved");
     if (saved) {
       saved.hidden = false;
-      saved.textContent = "✓ Guardado para " + nombreCat(catId) + " en este navegador.";
+      saved.textContent = "✓ Guardado para " + nombreCat(id) + " en este navegador.";
       clearTimeout(recordarComision._t);
       recordarComision._t = setTimeout(function () { saved.hidden = true; }, 2600);
     }
   }
 
   function cargarCategorias() {
-    var sel = document.getElementById("categoria");
+    var sel = byId("categoria");
     if (!sel) return;
-    if (window.__PRESETS__) { aplicarCategoriasData(window.__PRESETS__); }
+    if (window.__PRESETS__) { aplicarCategorias(window.__PRESETS__); }
     else {
       fetch(BRAND.presetsUrl || "data/presets.json", { cache: "no-store" })
         .then(function (r) { return r.json(); })
-        .then(aplicarCategoriasData)
-        .catch(function () {
-          var bar = sel.closest(".cat-bar");
-          if (bar) bar.style.display = "none";
-        });
+        .then(aplicarCategorias)
+        .catch(function () { var bar = byId("cat-bar"); if (bar) bar.style.display = "none"; });
     }
     sel.addEventListener("change", onCategoriaChange);
-
-    var comEl = document.getElementById("comisionPct");
-    var cargoEl = document.getElementById("cargoFijo");
+    var comEl = byId("comisionPct"), cargoEl = byId("cargoFijo");
     if (comEl) comEl.addEventListener("change", recordarComision);
     if (cargoEl) cargoEl.addEventListener("change", recordarComision);
   }
 
-  /* ---------- Limpiar / reset ---------- */
+  /* ---------- Limpiar ---------- */
   function limpiarTodo() {
     var init = BRAND.valoresIniciales || {};
-    CAMPOS.forEach(function (c) {
-      var el = document.getElementById(c);
-      if (el) el.value = init[c] !== undefined ? init[c] : "";
-    });
-    var cat = document.getElementById("categoria");
-    if (cat) cat.selectedIndex = 0;
-    var catNote = document.getElementById("cat-ref-note");
-    if (catNote) catNote.hidden = true;
-    var saved = document.getElementById("comision-saved");
-    if (saved) saved.hidden = true;
+    CAMPOS.forEach(function (c) { var el = byId(c); if (el) el.value = init[c] !== undefined ? init[c] : ""; });
+    var cat = byId("categoria"); if (cat) cat.selectedIndex = 0;
+    var canal = byId("canal"); if (canal) canal.selectedIndex = 0;
+    [ "cat-ref-note", "comision-saved" ].forEach(function (id) { var el = byId(id); if (el) el.hidden = true; });
+    if (modoObjetivo !== "ganancia") toggleModo();
+    onCanalChange();
     limpiarErrores();
-    mostrarVacio();
-    var precio = document.getElementById("precioVenta");
-    if (precio) precio.focus();
+    mostrar("vacio");
+    var costo = byId("costoProducto"); if (costo) costo.focus();
   }
 
   /* ---------- Init ---------- */
   function aplicarIniciales() {
     var init = BRAND.valoresIniciales || {};
-    CAMPOS.forEach(function (c) {
-      var el = document.getElementById(c);
-      if (el && init[c] !== undefined && el.value === "") el.value = init[c];
-    });
+    CAMPOS.forEach(function (c) { var el = byId(c); if (el && init[c] !== undefined && el.value === "") el.value = init[c]; });
   }
 
   function boot() {
-    emptyBox = document.getElementById("results-empty");
-    fullBox = document.getElementById("results-full");
-
+    emptyBox = byId("results-empty");
+    fullBox = byId("results-full");
+    impBox = byId("results-imposible");
     if (!RML) { console.error("Motor de cálculo no disponible"); return; }
 
     safe(aplicarIniciales, "aplicarIniciales");
     safe(poblarMonedas, "poblarMonedas");
     safe(cargarCategorias, "cargarCategorias");
 
-    // Recalcular en vivo
-    CAMPOS.forEach(function (c) {
-      var el = document.getElementById(c);
-      if (el) el.addEventListener("input", recalcularDebounced);
-    });
+    CAMPOS.forEach(function (c) { var el = byId(c); if (el) el.addEventListener("input", recalcularDebounced); });
 
-    var form = document.getElementById("form-calc");
+    var form = byId("form-calc");
     if (form) form.addEventListener("submit", function (ev) { ev.preventDefault(); recalcular(); });
-
-    var btnLimpiar = document.getElementById("btn-limpiar");
+    var toggle = byId("modo-toggle");
+    if (toggle) toggle.addEventListener("click", toggleModo);
+    var canal = byId("canal");
+    if (canal) canal.addEventListener("change", onCanalChange);
+    var btnLimpiar = byId("btn-limpiar");
     if (btnLimpiar) btnLimpiar.addEventListener("click", limpiarTodo);
-
-    var btnReset = document.getElementById("btn-reset-vista");
+    var btnReset = byId("btn-reset-vista");
     if (btnReset) btnReset.addEventListener("click", function () {
       limpiarTodo();
-      var top = document.getElementById("calculadora");
+      var top = byId("calculadora");
       if (top) top.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-    var year = document.getElementById("year");
+    var year = byId("year");
     if (year) year.textContent = new Date().getFullYear();
 
-    // Primer cálculo (por si hay valores precargados)
+    safe(onCanalChange, "onCanalChange");
     recalcular();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
 })();

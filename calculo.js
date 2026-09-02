@@ -353,6 +353,228 @@
     return { valido: true, errores: [], avisos: v.avisos, entrada: e, resultado: resultado };
   }
 
+  /* ===========================================================================
+   * MODO OBJETIVO — "Decime cuánto querés ganar y te digo a cuánto vender".
+   * Todo POR UNIDAD. Los porcentajes (comisión, impuestos) se aplican sobre el
+   * precio de venta. Reutiliza `calcular()` (con unidades=1) para el desglose.
+   *
+   * Fórmula central (precio a partir de una ganancia objetivo G):
+   *   ganancia(precio) = precio·(1 − k) − fijos
+   *   con k = (comisión% + impuestos%) / 100
+   *   y  fijos = costo + cargoFijo + envío + publicidad + otros
+   *   => precio = (G + fijos) / (1 − k)
+   * ========================================================================= */
+
+  // Fracción del precio que se llevan los costos porcentuales.
+  function _kPct(e) { return (e.comisionPct + e.impuestosPct) / 100; }
+  // Costos por unidad que NO dependen del precio.
+  function _fijosUnit(e) {
+    return e.costoProducto + e.cargoFijo + e.envio + e.publicidad + e.otrosCostos;
+  }
+
+  // Ganancia por unidad a un precio de venta dado.
+  function gananciaEnPrecio(e, precio) {
+    return precio * (1 - _kPct(e)) - _fijosUnit(e);
+  }
+
+  // Precio de venta necesario para una ganancia objetivo (en $) por unidad.
+  function precioParaGanancia(e, G) {
+    var denom = 1 - _kPct(e);
+    if (denom <= 0) return null;
+    var p = (G + _fijosUnit(e)) / denom;
+    return (isFinite(p) && p > 0) ? p : null;
+  }
+
+  // Precio de venta necesario para un margen objetivo (% sobre el precio).
+  function precioParaMargen(e, mPct) {
+    var denom = 1 - _kPct(e) - mPct / 100;
+    if (denom <= 0) return null;
+    var p = _fijosUnit(e) / denom;
+    return (isFinite(p) && p > 0) ? p : null;
+  }
+
+  // Costo máximo de compra del producto para lograr la ganancia G a un precio dado.
+  function costoMaximoParaGanancia(e, precio, G) {
+    var otrosFijos = e.cargoFijo + e.envio + e.publicidad + e.otrosCostos;
+    return precio * (1 - _kPct(e)) - G - otrosFijos;
+  }
+
+  // Redondeo del precio SIEMPRE hacia arriba: garantiza que la ganancia real
+  // nunca quede por debajo del objetivo por culpa del redondeo.
+  function redondearPrecioArriba(precio, paso) {
+    paso = paso || 1;
+    if (!isFinite(precio)) return 0;
+    return Math.ceil(precio / paso) * paso;
+  }
+
+  function validarObjetivo(entrada) {
+    entrada = entrada || {};
+    var errores = [], avisos = [];
+    var modo = entrada.modoObjetivo === "margen" ? "margen" : "ganancia";
+
+    var costoProducto = parseNumero(entrada.costoProducto, NaN);
+    var comisionPct = parseNumero(entrada.comisionPct, 0);
+    var impuestosPct = parseNumero(entrada.impuestosPct, 0);
+    var cargoFijo = parseNumero(entrada.cargoFijo, 0);
+    var envio = parseNumero(entrada.envio, 0);
+    var publicidad = parseNumero(entrada.publicidad, 0);
+    var otrosCostos = parseNumero(entrada.otrosCostos, 0);
+    var gananciaObjetivo = parseNumero(entrada.gananciaObjetivo, NaN);
+    var margenObjetivoPct = parseNumero(entrada.margenObjetivoPct, NaN);
+    var precioReferencia = esVacio(entrada.precioReferencia) ? null : parseNumero(entrada.precioReferencia, NaN);
+    var inversionInicial = parseNumero(entrada.inversionInicial, 0);
+
+    if (esVacio(entrada.costoProducto) || isNaN(costoProducto)) {
+      errores.push({ campo: "costoProducto", mensaje: "Ingresá cuánto te cuesta el producto." });
+    } else if (costoProducto < 0) {
+      errores.push({ campo: "costoProducto", mensaje: "El costo no puede ser negativo." });
+    }
+
+    if (modo === "ganancia") {
+      if (esVacio(entrada.gananciaObjetivo) || isNaN(gananciaObjetivo)) {
+        errores.push({ campo: "gananciaObjetivo", mensaje: "Ingresá cuánto querés ganar por unidad." });
+      } else if (gananciaObjetivo < 0) {
+        errores.push({ campo: "gananciaObjetivo", mensaje: "La ganancia objetivo no puede ser negativa." });
+      }
+    } else {
+      if (esVacio(entrada.margenObjetivoPct) || isNaN(margenObjetivoPct)) {
+        errores.push({ campo: "margenObjetivoPct", mensaje: "Ingresá el margen objetivo." });
+      } else if (margenObjetivoPct < 0 || margenObjetivoPct >= 100) {
+        errores.push({ campo: "margenObjetivoPct", mensaje: "El margen objetivo debe estar entre 0 % y 99 %." });
+      }
+    }
+
+    [["cargoFijo", cargoFijo], ["envio", envio], ["publicidad", publicidad],
+     ["otrosCostos", otrosCostos], ["inversionInicial", inversionInicial]].forEach(function (c) {
+      if (c[1] < 0) errores.push({ campo: c[0], mensaje: "No puede ser negativo." });
+    });
+    if (comisionPct < 0 || comisionPct > 100) errores.push({ campo: "comisionPct", mensaje: "La comisión debe estar entre 0 % y 100 %." });
+    if (impuestosPct < 0 || impuestosPct > 100) errores.push({ campo: "impuestosPct", mensaje: "Los impuestos deben estar entre 0 % y 100 %." });
+    if (comisionPct + impuestosPct >= 100) errores.push({ campo: "comisionPct", mensaje: "Comisión + impuestos no pueden sumar 100 % o más del precio." });
+    if (precioReferencia !== null && (isNaN(precioReferencia) || precioReferencia <= 0)) {
+      errores.push({ campo: "precioReferencia", mensaje: "El precio de referencia debe ser mayor que 0." });
+    }
+
+    var norm = {
+      nombreProducto: entrada.nombreProducto ? String(entrada.nombreProducto).trim() : "",
+      canal: entrada.canal || "mercadolibre",
+      modoObjetivo: modo,
+      costoProducto: costoProducto, comisionPct: comisionPct, impuestosPct: impuestosPct,
+      cargoFijo: cargoFijo, envio: envio, publicidad: publicidad, otrosCostos: otrosCostos,
+      gananciaObjetivo: isNaN(gananciaObjetivo) ? null : gananciaObjetivo,
+      margenObjetivoPct: isNaN(margenObjetivoPct) ? null : margenObjetivoPct,
+      precioReferencia: precioReferencia, inversionInicial: inversionInicial
+    };
+    return { valido: errores.length === 0, errores: errores, avisos: avisos, entrada: norm };
+  }
+
+  function calcularObjetivo(entradaCruda) {
+    var v = validarObjetivo(entradaCruda);
+    if (!v.valido) {
+      return { valido: false, errores: v.errores, avisos: v.avisos, entrada: v.entrada, resultado: null };
+    }
+    var e = v.entrada;
+
+    // 1) Precio exacto para el objetivo.
+    var precioExacto = (e.modoObjetivo === "ganancia")
+      ? precioParaGanancia(e, e.gananciaObjetivo)
+      : precioParaMargen(e, e.margenObjetivoPct);
+
+    if (precioExacto === null) {
+      return {
+        valido: true, errores: [], avisos: v.avisos, entrada: e,
+        resultado: {
+          imposible: true,
+          motivoImposible: "Con estos costos y objetivo no hay un precio posible: los porcentajes (y el margen) se llevan todo el precio de venta. Bajá la comisión, los impuestos o el margen objetivo."
+        }
+      };
+    }
+
+    // 2) Redondeo hacia arriba (nunca baja del objetivo).
+    var precio = redondearPrecioArriba(precioExacto, 1);
+
+    // Objetivo de ganancia efectivo en $ (para modo margen, al precio recomendado).
+    var gObjetivo = (e.modoObjetivo === "ganancia") ? e.gananciaObjetivo : (precio * e.margenObjetivoPct / 100);
+
+    // 3) Desglose reutilizando el motor existente (unidades=1 => por unidad).
+    var fw = calcular({
+      precioVenta: precio, costoProducto: e.costoProducto, comisionPct: e.comisionPct,
+      cargoFijo: e.cargoFijo, envio: e.envio, impuestosPct: e.impuestosPct,
+      publicidad: e.publicidad, otrosCostos: e.otrosCostos, unidades: 1
+    }).resultado;
+
+    // 4) Costo máximo del proveedor (a un precio de referencia; default: recomendado).
+    var precioRef = e.precioReferencia || precio;
+    var gRef = (e.modoObjetivo === "ganancia") ? e.gananciaObjetivo : (precioRef * e.margenObjetivoPct / 100);
+    var costoMaximo = costoMaximoParaGanancia(e, precioRef, gRef);
+
+    // 5) Publicidad.
+    var maxPublicidad = fw.maxPublicidadPorVenta;         // ganancia antes de publicidad
+    var publicidadAdicional = maxPublicidad - e.publicidad;
+
+    // 6) Punto de equilibrio: unidades para recuperar la inversión inicial (opcional).
+    var unidadesEquilibrio = null;
+    if (e.inversionInicial > 0 && fw.gananciaUnit > 0) {
+      unidadesEquilibrio = Math.ceil(e.inversionInicial / fw.gananciaUnit);
+    }
+
+    // 7) Escenarios de precio (alrededor del recomendado).
+    var pasos = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15];
+    var escenariosPrecio = pasos.map(function (f) {
+      var p = (f === 0) ? precio : redondearPrecioArriba(precio * (1 + f), 1);
+      var g = gananciaEnPrecio(e, p);
+      return { precio: p, ganancia: redondear(g), margen: redondear(p > 0 ? g / p * 100 : 0), objetivo: f === 0 };
+    });
+
+    // 8) Escenarios de ganancia (alrededor del objetivo) — solo en modo ganancia.
+    var escenariosGanancia = null;
+    if (e.modoObjetivo === "ganancia") {
+      var base = e.gananciaObjetivo;
+      escenariosGanancia = [-0.4, -0.2, 0, 0.2, 0.4].map(function (f) {
+        var g = Math.max(0, redondear(base * (1 + f), 0));
+        var pe = precioParaGanancia(e, g);
+        return { ganancia: g, precio: pe === null ? null : redondearPrecioArriba(pe, 1), objetivo: f === 0 };
+      });
+    }
+
+    var resultado = {
+      imposible: false,
+      nombreProducto: e.nombreProducto,
+      canal: e.canal,
+      modoObjetivo: e.modoObjetivo,
+      precioExacto: redondear(precioExacto),
+      precio: precio,
+      gananciaObjetivo: redondear(gObjetivo),
+
+      gananciaUnit: fw.gananciaUnit,
+      margenPct: fw.margenPct,
+      roiPct: fw.roiPct,
+      costosTotales: fw.costosLoteTotal,
+      costoProducto: fw.costoProducto,
+      comision: fw.comision, impuestos: fw.impuestos,
+      cargoFijo: fw.cargoFijo, envio: fw.envio,
+      publicidad: fw.publicidad, otrosCostos: fw.otrosCostos,
+      semaforo: fw.semaforo,
+
+      precioReferencia: precioRef,
+      costoMaximo: redondear(costoMaximo),
+      costoMaximoPosible: costoMaximo > 0,
+
+      maxPublicidad: redondear(maxPublicidad),
+      publicidadActual: redondear(e.publicidad),
+      publicidadAdicional: redondear(publicidadAdicional),
+      acosEquilibrioPct: redondear(fw.acosEquilibrioPct),
+      deficitario: maxPublicidad < 0,
+
+      inversionInicial: e.inversionInicial,
+      unidadesEquilibrio: unidadesEquilibrio,
+
+      escenariosPrecio: escenariosPrecio,
+      escenariosGanancia: escenariosGanancia
+    };
+    return { valido: true, errores: [], avisos: v.avisos, entrada: e, resultado: resultado };
+  }
+
   /* ---------------------------------------------------------------------------
    * Formateo (utilidad de UI, separada del motor). No la usa el cálculo.
    * ------------------------------------------------------------------------- */
@@ -389,6 +611,14 @@
     calcular: calcular,
     evaluarSemaforo: evaluarSemaforo,
     precioMinimoParaMargen: precioMinimoParaMargen,
+    // Modo objetivo (reverse pricing)
+    validarObjetivo: validarObjetivo,
+    calcularObjetivo: calcularObjetivo,
+    precioParaGanancia: precioParaGanancia,
+    precioParaMargen: precioParaMargen,
+    gananciaEnPrecio: gananciaEnPrecio,
+    costoMaximoParaGanancia: costoMaximoParaGanancia,
+    redondearPrecioArriba: redondearPrecioArriba,
     formato: formato
   };
 

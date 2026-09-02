@@ -79,6 +79,10 @@
     }
     mostrar("full");
 
+    // Aviso si en Mercado Libre no se cargó la comisión (resultado incompleto/obvio).
+    var warn = byId("warn-comision");
+    if (warn) warn.hidden = !(e.canal === "mercadolibre" && e.comisionPct === 0);
+
     var prod = d.nombreProducto ? (" de tu " + d.nombreProducto) : "";
     // Línea de objetivo
     var objTxt = (d.modoObjetivo === "ganancia")
@@ -257,8 +261,8 @@
   function onCanalChange() {
     var canal = (byId("canal") || {}).value;
     var esML = canal === "mercadolibre";
-    var catBar = byId("cat-bar");
-    if (catBar) catBar.style.display = esML ? "" : "none";
+    var mlCat = byId("ml-cat");
+    if (mlCat) mlCat.style.display = esML ? "" : "none";
     var label = byId("comision-label");
     if (label) {
       label.textContent = esML ? "Comisión de Mercado Libre"
@@ -288,97 +292,181 @@
     $$(".input-money").forEach(function (el) { el.setAttribute("data-sym", sym); });
   }
 
-  /* ---------- Categorías + memoria por navegador ---------- */
-  var LS_KEY = "margenlibre:comision:";
-  function lsGet(k) { try { return JSON.parse(localStorage.getItem(LS_KEY + k) || "null"); } catch (_) { return null; } }
-  function lsSet(k, v) { try { localStorage.setItem(LS_KEY + k, JSON.stringify(v)); } catch (_) {} }
-  function catActual() { var s = byId("categoria"); return s ? s.value : ""; }
-  function nombreCat(id) {
-    if (!presetsData || !presetsData.categorias) return "esta categoría";
-    var c = presetsData.categorias.filter(function (x) { return x.id === id; })[0];
-    return c ? c.nombre : "esta categoría";
-  }
-  function refCat(id) {
-    if (!presetsData || !presetsData.categorias) return null;
-    return presetsData.categorias.filter(function (x) { return x.id === id; })[0] || null;
-  }
-  function setVal(id, v) { var el = byId(id); if (el) el.value = v; }
+  /* ===========================================================================
+   * Categoría + comisión OFICIAL de Mercado Libre (API pública, sin clave).
+   * - domain_discovery/search: predice la categoría a partir del nombre del producto.
+   * - listing_prices: devuelve la comisión real (% + cargo fijo) por categoría.
+   * Todo con try/catch y fallback a carga manual si no hay conexión.
+   * ========================================================================= */
+  var ML_BASE = "https://api.mercadolibre.com";
+  var ML_SITE_POR_MONEDA = { ARS: "MLA", MXN: "MLM", CLP: "MLC", COP: "MCO", BRL: "MLB", UYU: "MLU", PEN: "MPE" };
+  var LS_FEE = "margenlibre:mlfee:"; // cache categoría -> {pct, fijo, nombre}
+  var catSeleccionada = null;         // { id, nombre }
+  var feePorTipo = null;              // { gold_special: {pct,fijo}, gold_pro: {...} }
 
-  function aplicarCategorias(data) {
-    presetsData = data;
-    var sel = byId("categoria");
-    if (!sel || !data || !data.categorias) return;
-    data.categorias.forEach(function (c) {
-      var opt = document.createElement("option");
-      opt.value = c.id; opt.textContent = c.nombre;
-      sel.appendChild(opt);
+  function mlSite() { return ML_SITE_POR_MONEDA[monedaActual] || "MLA"; }
+  function precioEstimado() {
+    var costo = RML.parseNumero((byId("costoProducto") || {}).value, 0);
+    var gan = RML.parseNumero((byId("gananciaObjetivo") || {}).value, 0);
+    var ref = RML.parseNumero((byId("precioReferencia") || {}).value, 0);
+    return ref > 0 ? ref : Math.max(1, costo + gan);
+  }
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (_) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+
+  function catStatus(msg, tipo) {
+    var el = byId("cat-status");
+    if (!el) return;
+    if (!msg) { el.hidden = true; el.textContent = ""; el.className = "cat-status"; return; }
+    el.hidden = false; el.textContent = msg;
+    el.className = "cat-status" + (tipo ? " cat-status--" + tipo : "");
+  }
+
+  function tipoListing() {
+    var r = document.querySelector('input[name="listing"]:checked');
+    return r ? r.value : "gold_special";
+  }
+
+  // Busca categorías por nombre de producto (predictor de ML).
+  function buscarCategorias() {
+    var q = (byId("cat-q") || {}).value.trim() || (byId("nombreProducto") || {}).value.trim();
+    if (!q) { catStatus("Escribí tu producto (ej: termo Stanley) y tocá Buscar.", "warn"); return; }
+    catStatus("Buscando en Mercado Libre…", "load");
+    var lista = byId("cat-resultados"); if (lista) { lista.hidden = true; lista.innerHTML = ""; }
+    var url = ML_BASE + "/sites/" + mlSite() + "/domain_discovery/search?limit=8&q=" + encodeURIComponent(q);
+    fetch(url).then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (arr) {
+        if (!Array.isArray(arr) || arr.length === 0) { catStatus("No encontramos categorías para «" + q + "». Probá con otro nombre o cargá la comisión a mano abajo.", "warn"); return; }
+        // Deduplicar por category_id
+        var vistos = {}, items = [];
+        arr.forEach(function (x) {
+          if (x.category_id && !vistos[x.category_id]) { vistos[x.category_id] = 1; items.push(x); }
+        });
+        catStatus("", null);
+        pintarResultados(items);
+      })
+      .catch(function () {
+        catStatus("No pudimos conectar con Mercado Libre (puede ser tu conexión). Cargá tu comisión a mano abajo: está en tu publicación → «Costo de venta».", "warn");
+      });
+  }
+
+  function pintarResultados(items) {
+    var lista = byId("cat-resultados");
+    if (!lista) return;
+    lista.innerHTML = items.map(function (x, i) {
+      var nombre = x.category_name || x.domain_name || "Categoría";
+      return '<li><button type="button" class="cat-op" data-i="' + i + '">' +
+        escapeHtml(nombre) + '</button></li>';
+    }).join("");
+    lista.hidden = false;
+    Array.prototype.forEach.call(lista.querySelectorAll(".cat-op"), function (btn) {
+      btn.addEventListener("click", function () {
+        var it = items[parseInt(btn.getAttribute("data-i"), 10)];
+        seleccionarCategoria(it.category_id, it.category_name || it.domain_name || "Categoría");
+      });
     });
   }
 
-  function onCategoriaChange() {
-    var id = catActual();
-    var note = byId("cat-ref-note");
-    if (note) { note.hidden = true; note.textContent = ""; }
-    if (!id || id === "sin-cat") return;
-
-    var guardado = lsGet(id);
-    if (guardado && guardado.comisionPct != null && guardado.comisionPct !== "") {
-      setVal("comisionPct", guardado.comisionPct);
-      if (guardado.cargoFijo != null && guardado.cargoFijo !== "") setVal("cargoFijo", guardado.cargoFijo);
-      if (note) { note.hidden = false; note.innerHTML = "Usamos la comisión que guardaste para <strong>" +
-        escapeHtml(nombreCat(id)) + "</strong> (" + escapeHtml(String(guardado.comisionPct)) + " %). Editala si cambió."; }
-      recalcular(); return;
-    }
-    var ref = refCat(id);
-    if (ref && ref.comisionRefPct != null && ref.comisionRefPct !== "") {
-      setVal("comisionPct", ref.comisionRefPct);
-      if (ref.cargoFijoRef != null && ref.cargoFijoRef !== "") setVal("cargoFijo", ref.cargoFijoRef);
-      if (note) { note.hidden = false; note.innerHTML = "Valor <strong>orientativo</strong> (no oficial). Verificá el tuyo en tu publicación o en el simulador de ML."; }
-      recalcular(); return;
-    }
-    if (note) { note.hidden = false; note.innerHTML = "Cargá tu comisión de <strong>" +
-      escapeHtml(nombreCat(id)) + "</strong> abajo y la recordamos para la próxima."; }
+  // Trae la comisión oficial de una categoría y la aplica.
+  function seleccionarCategoria(catId, nombre) {
+    catSeleccionada = { id: catId, nombre: nombre };
+    var lista = byId("cat-resultados"); if (lista) lista.hidden = true;
+    catStatus("Trayendo la comisión de «" + nombre + "»…", "load");
+    traerComision(catId).then(function (fees) {
+      feePorTipo = fees;
+      lsSet(LS_FEE + catId, { fees: fees, nombre: nombre });
+      mostrarCategoriaSeleccionada();
+      aplicarComision();
+      catStatus("", null);
+    }).catch(function () {
+      // Sin conexión: si hay cache, usarla; si no, dejar manual.
+      var cache = lsGet(LS_FEE + catId);
+      if (cache && cache.fees) {
+        feePorTipo = cache.fees;
+        mostrarCategoriaSeleccionada();
+        aplicarComision();
+        catStatus("Usamos un valor guardado (sin conexión con ML ahora).", "warn");
+      } else {
+        catStatus("Elegiste «" + nombre + "» pero no pudimos traer la comisión. Cargala a mano abajo.", "warn");
+        mostrarCategoriaSeleccionada();
+      }
+    });
   }
 
-  function recordarComision() {
-    var id = catActual();
-    if (!id || id === "sin-cat") return;
-    var comision = (byId("comisionPct") || {}).value;
-    var cargo = (byId("cargoFijo") || {}).value;
-    if (String(comision || "").trim() === "") return;
-    lsSet(id, { comisionPct: comision, cargoFijo: cargo });
-    var saved = byId("comision-saved");
-    if (saved) {
-      saved.hidden = false;
-      saved.textContent = "✓ Guardado para " + nombreCat(id) + " en este navegador.";
-      clearTimeout(recordarComision._t);
-      recordarComision._t = setTimeout(function () { saved.hidden = true; }, 2600);
-    }
+  function traerComision(catId) {
+    var precio = precioEstimado();
+    var url = ML_BASE + "/sites/" + mlSite() + "/listing_prices?price=" + encodeURIComponent(precio) + "&category_id=" + encodeURIComponent(catId);
+    return fetch(url).then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (arr) {
+        var out = {};
+        (Array.isArray(arr) ? arr : []).forEach(function (row) {
+          var det = row.sale_fee_details || {};
+          if (row.listing_type_id && det.percentage_fee != null) {
+            out[row.listing_type_id] = { pct: det.percentage_fee, fijo: det.fixed_fee || 0 };
+          }
+        });
+        if (!out.gold_special && !out.gold_pro) throw new Error("sin datos");
+        return out;
+      });
   }
 
-  function cargarCategorias() {
-    var sel = byId("categoria");
-    if (!sel) return;
-    if (window.__PRESETS__) { aplicarCategorias(window.__PRESETS__); }
-    else {
-      fetch(BRAND.presetsUrl || "data/presets.json", { cache: "no-store" })
-        .then(function (r) { return r.json(); })
-        .then(aplicarCategorias)
-        .catch(function () { var bar = byId("cat-bar"); if (bar) bar.style.display = "none"; });
+  function mostrarCategoriaSeleccionada() {
+    var box = byId("cat-sel");
+    if (box) box.hidden = false;
+    var nameEl = byId("cat-sel-name");
+    if (nameEl && catSeleccionada) nameEl.textContent = catSeleccionada.nombre;
+  }
+
+  function aplicarComision() {
+    if (!feePorTipo) return;
+    var tipo = tipoListing();
+    var fee = feePorTipo[tipo] || feePorTipo.gold_special || feePorTipo.gold_pro;
+    if (!fee) return;
+    setVal("comisionPct", RML.redondear(fee.pct, 2));
+    setVal("cargoFijo", RML.redondear(fee.fijo, 2));
+    var feeEl = byId("cat-sel-fee");
+    if (feeEl) {
+      var tName = tipo === "gold_pro" ? "Premium" : "Clásica";
+      feeEl.innerHTML = "Comisión oficial de Mercado Libre: <strong>" + fPct(fee.pct, 1) + "</strong>" +
+        (fee.fijo > 0 ? " + " + fMoneda(fee.fijo) + " fijo" : "") +
+        " · publicación <strong>" + tName + "</strong>. Podés editarla abajo.";
     }
-    sel.addEventListener("change", onCategoriaChange);
-    var comEl = byId("comisionPct"), cargoEl = byId("cargoFijo");
-    if (comEl) comEl.addEventListener("change", recordarComision);
-    if (cargoEl) cargoEl.addEventListener("change", recordarComision);
+    recalcular();
+  }
+
+  function setVal(id, v) { var el = byId(id); if (el) el.value = v; }
+
+  function cambiarCategoria() {
+    catSeleccionada = null; feePorTipo = null;
+    var box = byId("cat-sel"); if (box) box.hidden = true;
+    var lista = byId("cat-resultados"); if (lista) lista.hidden = true;
+    catStatus("", null);
+    var q = byId("cat-q"); if (q) q.focus();
+  }
+
+  function initCategorias() {
+    var btn = byId("cat-buscar");
+    if (btn) btn.addEventListener("click", buscarCategorias);
+    var q = byId("cat-q");
+    if (q) {
+      q.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); buscarCategorias(); } });
+      // Pre-cargar el nombre del producto como término de búsqueda.
+      var nombre = byId("nombreProducto");
+      if (nombre) nombre.addEventListener("change", function () { if (!q.value.trim()) q.value = nombre.value.trim(); });
+    }
+    var cambiar = byId("cat-cambiar");
+    if (cambiar) cambiar.addEventListener("click", cambiarCategoria);
+    $$('input[name="listing"]').forEach(function (r) { r.addEventListener("change", aplicarComision); });
   }
 
   /* ---------- Limpiar ---------- */
   function limpiarTodo() {
     var init = BRAND.valoresIniciales || {};
     CAMPOS.forEach(function (c) { var el = byId(c); if (el) el.value = init[c] !== undefined ? init[c] : ""; });
-    var cat = byId("categoria"); if (cat) cat.selectedIndex = 0;
     var canal = byId("canal"); if (canal) canal.selectedIndex = 0;
-    [ "cat-ref-note", "comision-saved" ].forEach(function (id) { var el = byId(id); if (el) el.hidden = true; });
+    var catQ = byId("cat-q"); if (catQ) catQ.value = "";
+    cambiarCategoria();
+    var savedN = byId("comision-saved"); if (savedN) savedN.hidden = true;
     if (modoObjetivo !== "ganancia") toggleModo();
     onCanalChange();
     limpiarErrores();
@@ -400,7 +488,7 @@
 
     safe(aplicarIniciales, "aplicarIniciales");
     safe(poblarMonedas, "poblarMonedas");
-    safe(cargarCategorias, "cargarCategorias");
+    safe(initCategorias, "initCategorias");
 
     CAMPOS.forEach(function (c) { var el = byId(c); if (el) el.addEventListener("input", recalcularDebounced); });
 

@@ -242,6 +242,39 @@ input, select, button { font: inherit; }
 .cat-ref-note { display: block; margin-top: .5rem; line-height: 1.45; color: var(--ink-soft); }
 .saved-note { display: block; font-size: .78rem; color: var(--green); font-weight: 700; margin-top: .28rem; }
 
+/* Buscador de categoría de Mercado Libre */
+.ml-cat { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--radius-sm); padding: .85rem; margin-top: .3rem; }
+.ml-cat > label { font-size: .85rem; font-weight: 700; display: block; margin-bottom: .45rem; }
+.cat-search { display: flex; gap: .5rem; }
+.cat-search input { flex: 1; min-width: 0; padding: .65rem .8rem; border: 1.5px solid var(--line-2); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+.cat-search input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
+.btn-sm { flex: none; padding: .65rem 1rem; border-radius: var(--radius-sm); font-weight: 700; background: var(--brand); color: #fff; transition: background .18s; }
+.btn-sm:hover { background: var(--brand-ink); }
+.cat-status { margin-top: .55rem; font-size: .82rem; line-height: 1.45; padding: .5rem .7rem; border-radius: var(--radius-sm); }
+.cat-status--load { color: var(--brand-ink); background: var(--brand-050); }
+.cat-status--warn { color: var(--amber); background: var(--amber-bg); }
+.cat-list { list-style: none; margin: .55rem 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); }
+.cat-list li { border-bottom: 1px solid var(--line); }
+.cat-list li:last-child { border-bottom: 0; }
+.cat-op { display: block; width: 100%; text-align: left; padding: .6rem .8rem; font-size: .88rem; font-weight: 600; color: var(--ink); transition: background .15s; }
+.cat-op:hover { background: var(--brand-050); color: var(--brand-ink); }
+.cat-sel { margin-top: .6rem; background: var(--surface); border: 1px solid var(--brand-050); border-left: 3px solid var(--brand); border-radius: var(--radius-sm); padding: .75rem .8rem; }
+.cat-sel-top { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.cat-sel-name { font-weight: 800; font-size: .92rem; }
+.link-btn { font-size: .78rem; font-weight: 700; color: var(--brand-ink); text-decoration: underline; }
+.listing-toggle { display: flex; gap: 1rem; margin: .55rem 0; font-size: .85rem; }
+.listing-toggle label { display: inline-flex; align-items: center; gap: .35rem; font-weight: 600; cursor: pointer; }
+.cat-sel-fee { font-size: .84rem; color: var(--ink-soft); line-height: 1.45; }
+.cat-sel-fee strong { color: var(--ink); }
+
+/* Aviso: falta comisión */
+.warn-comision {
+  margin-top: .9rem; font-size: .86rem; line-height: 1.5;
+  background: var(--amber-bg); border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+  border-radius: var(--radius-sm); padding: .8rem .9rem; color: var(--ink-soft);
+}
+.warn-comision strong { color: var(--ink); }
+
 /* Campo protagonista: cuánto querés ganar */
 .field-hero {
   background: var(--brand-050); border: 1.5px solid color-mix(in srgb, var(--brand) 25%, transparent);

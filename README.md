@@ -1,83 +1,59 @@
-# MargenLibre — Decime cuánto querés ganar. Te digo a cuánto vender.
+# MacroFácil — Calculadora de calorías y macros
 
 Micro-SaaS web **100 % estático** (HTML + CSS + JavaScript vanilla, sin backend,
-sin build, sin dependencias) orientado a **decisiones de precio**.
+sin build, sin dependencias) para el nicho fitness/nutrición: una de las
+herramientas más buscadas y mejor monetizables con publicidad.
 
-En vez de ser "otra calculadora de comisiones", invierte la pregunta:
+> Ingresás tus datos y te dice **cuántas calorías** y **cuántos gramos de
+> proteína, carbohidratos y grasa** necesitás por día según tu objetivo:
+> bajar grasa, mantener o ganar músculo.
 
-> **Vos decís cuánto te cuesta y cuánto querés ganar. Te decimos a qué precio publicar.**
-
-> Mercado Libre te dice cuánto te cobra. **MargenLibre te dice a cuánto vender
-> para ganar lo que vos querés.**
-
----
-
-## 🧭 Regla de oro
-
-**La herramienta no inventa ningún dato.** No trae comisiones, impuestos ni costos
-oficiales precargados. Todos los valores los ingresa el usuario. Para Mercado Libre,
-un selector de categoría **guía** a encontrar la comisión real y la **recuerda en el
-navegador** (localStorage) por categoría; no se fabrica ningún porcentaje.
+Usa fórmulas **estándar y reconocidas** (Mifflin-St Jeor + factores de actividad),
+no valores inventados.
 
 ---
 
 ## ✨ Qué hace
 
-A partir de: **costo del producto** + **cuánto querés ganar por unidad** (o % de
-margen) + **dónde vendés** + **tus costos**, calcula:
+- **Calorías diarias** según objetivo (déficit / mantenimiento / superávit).
+- **Macros**: gramos de proteína, carbohidratos y grasa, con kcal y % de cada uno.
+- **TDEE** (mantenimiento) y **BMR** (metabolismo basal).
+- **IMC** con categoría.
+- Reparto **por comida** (4 comidas) como referencia práctica.
+- **"Cómo se calculó"** con tus datos reales.
 
-- **Precio de publicación recomendado** (redondeado hacia arriba para que la
-  ganancia real nunca quede por debajo del objetivo).
-- **Ganancia por unidad, margen, costos totales y ROI** a ese precio.
-- **¿Qué pasa si cambiás el precio?** — tabla de escenarios (más caro / más barato).
-- **¿Cuánto podés pagar como máximo por el producto?** — cálculo inverso del costo
-  del proveedor (clave para decidir si conviene comprar para revender).
-- **¿Cuánto podés gastar en publicidad?** — publicidad actual, adicional disponible,
-  máximo total y ACOS de equilibrio.
-- **Punto de equilibrio** — unidades para recuperar tu inversión en stock (opcional).
-- **Escenarios de ganancia** — "para ganar $X → publicá a $Y" alrededor de tu objetivo.
-- **"Cómo se calculó"** con tus números reales.
-
----
-
-## 📁 Estructura del proyecto
+## 📁 Estructura
 
 ```
 ecom-calc/
-├── index.html            ← la herramienta (una sola página)
-├── styles.css            ← estilos (1 archivo, mobile-first, dark-mode)
-├── calculo.js            ← MOTOR (sin UI): calcular() [forward] + calcularObjetivo() [inverso]
-├── main.js               ← UI: cablea el DOM con el motor
-├── lib/manifest.js       ← datos de marca (window.__BRAND__)
-├── data/presets.json     ← categorías de ML (comisiones en null: no se inventan)
-├── assets/               ← favicon.svg, og-image.svg/.png
-├── tests/                ← 29 tests del motor (Node y navegador)
-│   ├── calculo.test.js
-│   ├── test-runner.html
-│   └── runner-ui.js
+├── index.html          ← la calculadora
+├── styles.css          ← estilos (mobile-first, dark-mode, paleta verde nutrición)
+├── calorias.js         ← MOTOR (sin UI): BMR/TDEE/macros/IMC, testeable en aislamiento
+├── main.js             ← UI: cablea el DOM con el motor
+├── lib/manifest.js     ← datos de marca (window.__BRAND__)
+├── assets/             ← favicon.svg, og-image.svg/.png
+├── tests/              ← 12 tests del motor (Node y navegador)
+│   ├── calorias.test.js · test-runner.html · runner-ui.js
 ├── privacidad.html · aviso-legal.html   ← esqueletos con TODOs del dueño
 ├── robots.txt · sitemap.xml · .htaccess
 └── README.md
 ```
 
-El **motor** (`calculo.js`) no toca el DOM y se testea solo. El modo inverso
-(`calcularObjetivo`) reutiliza el forward (`calcular`) para el desglose, así que
-hay una sola fuente de verdad matemática.
-
-### La fórmula central
+### Fórmulas (documentadas en `calorias.js`)
 
 ```
-precio = (costo + costos fijos + ganancia objetivo) / (1 − %comisión − %impuestos)
+BMR (Mifflin-St Jeor):
+  Hombre: 10·peso(kg) + 6.25·altura(cm) − 5·edad + 5
+  Mujer:  10·peso(kg) + 6.25·altura(cm) − 5·edad − 161
+TDEE = BMR × factor de actividad (1.2 a 1.9)
+Calorías objetivo = TDEE × (1 ± ajuste del objetivo)
+Proteína: g/kg de peso · Grasa: % de calorías (mín 0.6 g/kg) · Carbos: el resto
+IMC = peso / altura(m)²
 ```
-
-Los costos fijos son por unidad (cargo fijo, envío, publicidad, otros). El precio
-se redondea **hacia arriba** para que el redondeo nunca baje la ganancia del objetivo.
 
 ---
 
-## ▶️ Cómo ejecutarlo localmente
-
-No hay que compilar nada. Servilo por HTTP (el `fetch` de los presets no corre con `file://`):
+## ▶️ Ejecutar localmente
 
 ```bash
 cd ecom-calc
@@ -88,72 +64,51 @@ python3 -m http.server 8137
 ### Tests
 
 ```bash
-node tests/calculo.test.js      # → 29/29 tests OK
+node tests/calorias.test.js      # → 12/12 tests OK
 ```
 
 O en el navegador: `http://localhost:8137/tests/test-runner.html`.
 
-Cubren: caso principal (costo $90.000 + ganancia $50.000), redondeo que nunca baja
-del objetivo (barrido de casos), costo máximo del proveedor, publicidad máxima,
-objetivo 0, costo 0, % total ≥ 100 %, resultado imposible, modo margen, escenarios
-de precio y de ganancia, punto de equilibrio, vacíos y negativos — además de los 16
-tests originales del motor forward.
+Cubren: caso verificado a mano, BMR por sexo, factores de actividad, déficit/superávit,
+macros que suman las calorías, niveles de proteína, categorías de IMC, mínimo de grasa,
+carbos no negativos, inputs vacíos, rangos inválidos y decimales.
 
 ---
 
-## 🚀 Cómo publicarlo en Hostinger
+## 🚀 Publicar en Hostinger
 
-1. hPanel → **Administrador de archivos** (o FTP) → carpeta `public_html`.
+1. hPanel → **Administrador de archivos** (o FTP) → `public_html`.
 2. Subí **todo el contenido** de `ecom-calc/` (que `index.html` quede en la raíz).
    Incluí el archivo oculto **`.htaccess`**. Podés omitir `tests/` en producción.
-3. Reemplazá `https://margenlibre.com` por tu dominio en `index.html`, `sitemap.xml`,
+3. Reemplazá `https://macrofacil.com` por tu dominio en `index.html`, `sitemap.xml`,
    `robots.txt`, `privacidad.html` y `aviso-legal.html`.
 4. Completá los `TODO OWNER` de las páginas legales (email, titular).
 5. Si tenés SSL, descomentá el bloque "HTTPS redirect" del `.htaccess`.
-6. Verificá abriendo tu dominio y haciendo un cálculo real.
-
-Al actualizar, subí el `?v=YYYYMMDD` en las referencias a `.css`/`.js` de los HTML.
+6. Al actualizar, subí el `?v=YYYYMMDD` de las referencias a `.css`/`.js`.
 
 ---
 
-## ✅ Funcionalidades implementadas
+## 💰 Monetización
 
-- Flujo invertido: costo + ganancia objetivo → **precio recomendado**.
-- Objetivo en **pesos** (protagonista) o en **% de margen** (con un clic).
-- Selector de **canal** (Mercado Libre / tienda / redes / otro) que adapta la UI.
-- **Categoría de ML + memoria de comisión** por navegador (no inventa comisiones).
-- Resultado muy visual: precio grande, KPIs, semáforo, tablas de escenarios.
-- **Costo máximo del proveedor** (decisión de compra) y **bloque de publicidad**
-  con 4 métricas explicadas.
-- **Punto de equilibrio** por inversión en stock (opcional).
-- Responsive real (sin overflow horizontal desde 320 px), dark-mode, accesibilidad.
-- SEO: title/description nuevos por intención de precio de venta, canonical, OG,
-  Twitter, JSON-LD (WebApplication + FAQPage), sitemap, robots.
-- Slots de AdSense como placeholders (nunca antes del resultado), páginas legales,
-  disclaimer. Estructura lista para Google Analytics sin dependencia.
-- 100 % estático, sin backend, sin APIs, funciona offline tras la primera carga.
+Espacios de AdSense ya reservados (placeholders, sin código): debajo del resultado,
+en el contenido y antes del footer. Fitness/nutrición es un vertical de **CPM alto**
+(suplementos, apps, ropa deportiva). Pegás tu código de AdSense y listo.
 
 ---
 
 ## 🔭 Mejoras futuras
 
-- Comparar **dos productos** lado a lado para decidir cuál conviene.
-- Guardar/compartir una simulación por hash en la URL (sin backend).
-- Exportar el resultado a PDF/imagen desde el navegador.
-- Páginas SEO dedicadas por intención (precio de venta con margen, markup, cuánto
-  cobrar por un producto, precio mínimo en ML, ROI ecommerce, Shopify/Tienda Nube…),
-  reutilizando el mismo motor.
-- Modo "publicidad como % del precio" además del monto por venta.
-- Activar GA4 y un CMP de cookies al monetizar con AdSense.
+- **Calculadora de 1RM** (peso máximo) + tabla de porcentajes.
+- **Armá tu plato**: sumar proteína y calorías de alimentos comunes (base incluida).
+- Calculadora de **agua diaria**, **IMC** dedicada, **grasa corporal**.
+- Unidades imperiales (lb / ft-in) además de métricas.
+- Guardar/compartir el resultado por URL (sin backend).
 
 ---
 
 ## ⚠️ Aviso
 
-Esta herramienta es orientativa y no constituye asesoramiento contable, fiscal,
-financiero ni comercial. Las comisiones, impuestos, costos de envío y condiciones de
-las plataformas pueden cambiar. Verificá los valores vigentes antes de tomar
-decisiones comerciales.
-
-MargenLibre es un proyecto **independiente**. No está afiliado, asociado ni
-respaldado por Mercado Libre. "Mercado Libre" es marca de sus respectivos titulares.
+Herramienta orientativa. No constituye asesoramiento médico ni nutricional. Los
+resultados son estimaciones basadas en fórmulas estándar y pueden no reflejar tus
+necesidades reales. Consultá con un profesional de la salud antes de hacer cambios
+importantes en tu alimentación o entrenamiento.

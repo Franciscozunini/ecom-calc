@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   function pintar() {
-    var res = window.__TESTS_RENTABILIDAD__.correr();
+    var res = window.__TESTS_MACROFACIL__.correr();
     var sum = document.getElementById("summary");
     var list = document.getElementById("list");
     sum.className = "summary " + (res.fallaron ? "fail" : "ok");

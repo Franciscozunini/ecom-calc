@@ -231,14 +231,80 @@
     return Object.keys(out).map(function (k) { return out[k]; });
   }
 
+  /* ===========================================================================
+   * GASTO CALÓRICO (estimaciones con MET — Compendium of Physical Activities).
+   * Fórmula MET estándar: kcal/min = MET · 3.5 · peso(kg) / 200.
+   * "neto" resta 1 MET (el reposo) para no contar doble con el gasto base.
+   * ========================================================================= */
+  var MET_ENTRENO = 5.0; // musculación con descansos (moderada-vigorosa)
+  var MET_CARDIO = {
+    caminata: { met: 4.3, label: "Caminata rápida" },
+    trote:    { met: 7.0, label: "Trote suave" },
+    correr:   { met: 9.8, label: "Correr" },
+    bici:     { met: 7.5, label: "Bici / spinning" },
+    eliptica: { met: 5.0, label: "Elíptica" },
+    remo:     { met: 7.0, label: "Remo" },
+    natacion: { met: 7.0, label: "Natación" },
+    hiit:     { met: 8.0, label: "HIIT / funcional" },
+    otro:     { met: 6.0, label: "Otro cardio" }
+  };
+
+  // Calorías de una actividad. neto=true resta el reposo (para sumar al gasto base).
+  function kcalActividad(met, minutos, peso, neto) {
+    var m = neto ? Math.max(0, num(met, 0) - 1) : num(met, 0);
+    var k = m * 3.5 * num(peso, 0) / 200 * num(minutos, 0);
+    return k > 0 ? round(k) : 0;
+  }
+  // Calorías por pasos. Los primeros ~4000 ya están en el gasto base (sedentario).
+  function kcalPasos(pasos, peso, altura) {
+    var extra = Math.max(0, num(pasos, 0) - 4000);
+    if (extra <= 0) return 0;
+    var strideM = 0.415 * (num(altura, 0) / 100);      // largo de zancada (m)
+    var km = extra * strideM / 1000;
+    var k = km * num(peso, 0) * 0.5;                    // ~0.5 kcal/kg/km (neto, caminar)
+    return k > 0 ? round(k) : 0;
+  }
+  // Duración estimada de una sesión a partir de la cantidad de series.
+  function duracionSesion(totalSets) { return clamp(Math.round(num(totalSets, 0) * 3.5), 10, 180); }
+  // Calorías estimadas de una sesión de musculación.
+  function kcalSesion(totalSets, minutos, peso) {
+    var min = num(minutos, 0) > 0 ? minutos : duracionSesion(totalSets);
+    return kcalActividad(MET_ENTRENO, min, peso, true);
+  }
+
+  /* Balance energético del día.
+   * gasto = BMR·1.2 (base: metabolismo + vida diaria) + pasos + entreno + cardio.
+   * balance = comido − gasto  (negativo = déficit).
+   */
+  function balanceDia(o) {
+    o = o || {};
+    var b = num(o.bmr, 0);
+    if (b <= 0) return null;
+    var base = b * 1.2;
+    var pasosKcal = kcalPasos(o.pasos, o.peso, o.altura);
+    var entreno = num(o.entrenoKcal, 0);
+    var cardio = num(o.cardioKcal, 0);
+    var gasto = base + pasosKcal + entreno + cardio;
+    var comido = num(o.comido, 0);
+    return {
+      base: round(base), pasosKcal: round(pasosKcal), entrenoKcal: round(entreno),
+      cardioKcal: round(cardio), gasto: round(gasto), comido: round(comido),
+      balance: round(comido - gasto),          // <0 déficit, >0 superávit
+      deficit: round(gasto - comido)           // positivo = déficit
+    };
+  }
+
   var API = {
     ACTIVIDAD: ACTIVIDAD, OBJETIVOS: OBJETIVOS, PROTEINA: PROTEINA, KCAL: KCAL, PCTS: PCTS,
+    MET_ENTRENO: MET_ENTRENO, MET_CARDIO: MET_CARDIO,
     num: num, round: round, clamp: clamp,
     bmr: bmr, tdee: tdee, calorias: calorias, macros: macros,
     proteinaRango: proteinaRango, aguaRecomendada: aguaRecomendada, imc: imc, planPeso: planPeso,
     oneRM: oneRM, tabla1RM: tabla1RM, repsDe1RM: repsDe1RM,
     volumenSet: volumenSet, volumenSesion: volumenSesion,
-    progresion: progresion, discos: discos, mejores: mejores, detectarPRs: detectarPRs
+    progresion: progresion, discos: discos, mejores: mejores, detectarPRs: detectarPRs,
+    kcalActividad: kcalActividad, kcalPasos: kcalPasos, kcalSesion: kcalSesion,
+    duracionSesion: duracionSesion, balanceDia: balanceDia
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = API;

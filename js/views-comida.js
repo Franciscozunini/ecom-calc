@@ -62,6 +62,23 @@
       el("div.field", { style: "margin-top:12px" }, [el("label", { text: "Registrar pasos de hoy" }), pasosInp])
     ]));
 
+    // Cardio
+    root.appendChild(el("div.section-h", {}, [el("h2", { text: "Cardio" }), el("button.btn.btn-primary.btn-sm", { html: plus() + " Cardio", onclick: function () { agregarCardio(hoy); } })]));
+    if (!d.cardio.length) {
+      root.appendChild(el("div.panel", {}, [el("p.muted", { style: "font-size:13px;margin:0", text: "Registrá tu cardio (correr, bici…) y estimamos las calorías quemadas." })]));
+    } else {
+      var ck = store.cardioKcalDia(hoy);
+      var box = el("div.panel", {}, [el("div.between", { style: "margin-bottom:4px" }, [el("div", { style: "font-weight:800;font-family:var(--disp)", text: "Total cardio" }), el("div.accent.num", { style: "font-weight:700", text: "−" + ui.n0(ck) + " kcal" })])]);
+      d.cardio.forEach(function (c) {
+        box.appendChild(el("div.lrow", {}, [
+          el("div.main", {}, [el("div.t", { text: c.label }), el("div.s", { text: ui.n0(c.minutos) + " min" })]),
+          el("div.end", {}, [ui.n0(c.kcal), el("div.s.muted", { text: "kcal", style: "font-weight:600" })]),
+          el("button.icon-btn", { html: trash(), onclick: function () { store.removeCardio(hoy, c.id); GYM.refresh(); } })
+        ]));
+      });
+      root.appendChild(box);
+    }
+
     // Ad
     root.appendChild(el("div.ad", { text: "Publicidad" }));
 
@@ -207,6 +224,37 @@
       } })
     ]);
     return box;
+  }
+
+  function agregarCardio(hoy) {
+    var peso = calc.num(store.get().perfil.peso, 0) || 75;
+    var sinPeso = !calc.num(store.get().perfil.peso, 0);
+    var tipo = "trote";
+    var sel = el("select.input", {}, Object.keys(calc.MET_CARDIO).map(function (k) {
+      return el("option", { value: k, selected: k === tipo ? "selected" : null, text: calc.MET_CARDIO[k].label });
+    }));
+    var minInp = el("input.input", { type: "text", inputmode: "numeric", placeholder: "30" });
+    var out = el("div.stat", { style: "text-align:center;margin:12px 0" }, [el("span.k", { text: "Estimado" }), el("span.v.num#cq", { text: "— kcal" })]);
+    function upd() {
+      var met = calc.MET_CARDIO[sel.value].met;
+      ui.$("#cq", out).textContent = ui.n0(calc.kcalActividad(met, minInp.value, peso, true)) + " kcal";
+    }
+    sel.addEventListener("change", upd); minInp.addEventListener("input", upd);
+    var body = el("div", {}, [
+      el("div.field", {}, [el("label", { text: "Tipo de cardio" }), sel]),
+      el("div.field", { style: "margin-top:10px" }, [el("label", { text: "Minutos" }), minInp]),
+      out,
+      sinPeso ? el("div.muted", { style: "font-size:11.5px;text-align:center", text: "Cargá tu peso en Perfil para más precisión (usamos 75 kg)." }) : null,
+      el("button.btn.btn-primary.btn-block", { style: "margin-top:12px", text: "Agregar cardio", onclick: function () {
+        var mm = calc.num(minInp.value, 0);
+        if (mm <= 0) { ui.toast("Ingresá los minutos"); return; }
+        var met = calc.MET_CARDIO[sel.value];
+        store.addCardio(hoy, { tipo: sel.value, label: met.label, minutos: mm, kcal: calc.kcalActividad(met.met, mm, peso, true) });
+        ui.toast("Cardio agregado", "good"); sh.close(); GYM.refresh();
+      } })
+    ]);
+    var sh = ui.sheet("Agregar cardio", body);
+    upd();
   }
 
   function editarAgua(hoy) {

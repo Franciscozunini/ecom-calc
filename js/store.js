@@ -72,9 +72,10 @@
 
   function dia(fecha) {
     var s = get();
-    if (!s.dias[fecha]) s.dias[fecha] = { agua: 0, pasos: 0, peso: null, comidas: [], entreno: null };
+    if (!s.dias[fecha]) s.dias[fecha] = { agua: 0, pasos: 0, peso: null, comidas: [], cardio: [], entreno: null };
     var d = s.dias[fecha];
     if (!Array.isArray(d.comidas)) d.comidas = [];
+    if (!Array.isArray(d.cardio)) d.cardio = [];
     if (typeof d.agua !== "number") d.agua = 0;
     if (typeof d.pasos !== "number") d.pasos = 0;
     return d;
@@ -108,6 +109,15 @@
     t.kcal = Math.round(t.kcal); t.prot = Math.round(t.prot);
     t.carb = Math.round(t.carb); t.grasa = Math.round(t.grasa);
     return t;
+  }
+
+  /* ---------- Cardio ---------- */
+  function addCardio(fecha, entry) { var d = dia(fecha); entry.id = entry.id || uid(); d.cardio.push(entry); save(); return entry; }
+  function removeCardio(fecha, id) { var d = dia(fecha); d.cardio = d.cardio.filter(function (c) { return c.id !== id; }); save(); }
+  function cardioKcalDia(fecha) { return dia(fecha).cardio.reduce(function (a, c) { return a + (Number(c.kcal) || 0); }, 0); }
+  function entrenoKcalDia(fecha) {
+    return get().sesiones.filter(function (s) { return s.fecha === fecha; })
+      .reduce(function (a, s) { return a + (Number(s.kcal) || 0); }, 0);
   }
 
   /* ---------- Agua / pasos / peso ---------- */
@@ -222,6 +232,7 @@
     fechaHoy: fechaHoy, dia: dia, uid: uid,
     setPerfil: setPerfil, setObjetivos: setObjetivos,
     addComida: addComida, removeComida: removeComida, macrosDia: macrosDia,
+    addCardio: addCardio, removeCardio: removeCardio, cardioKcalDia: cardioKcalDia, entrenoKcalDia: entrenoKcalDia,
     addAgua: addAgua, setAgua: setAgua, setPasos: setPasos, setPesoDia: setPesoDia, pesos: pesos, statsPeso: statsPeso,
     addRutina: addRutina, updateRutina: updateRutina, removeRutina: removeRutina, rutina: rutina,
     guardarSesion: guardarSesion, sesiones: sesiones, historialEjercicio: historialEjercicio,

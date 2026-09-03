@@ -50,6 +50,7 @@
         el("button.btn.btn-ghost", { text: "Exportar datos", onclick: exportar }),
         el("button.btn.btn-ghost", { text: "Importar datos", onclick: importar })
       ]),
+      el("button.btn.btn-ghost.btn-block", { style: "margin-top:10px", text: "Cargar un día de ejemplo", onclick: cargarEjemplo }),
       el("button.btn.btn-danger.btn-block", { style: "margin-top:10px", text: "Eliminar todos mis datos", onclick: borrar })
     ]));
 
@@ -156,6 +157,32 @@
     });
     document.body.appendChild(input); input.click(); setTimeout(function () { input.remove(); }, 1000);
   }
+  function cargarEjemplo() {
+    ui.confirmar("Cargamos un día de ejemplo en el día de hoy (perfil + entreno + comidas + cardio + pasos) para que veas cómo funciona el balance. Podés editar o borrar todo después.", function () {
+      var hoy = store.fechaHoy();
+      if (!store.get().perfil.peso) store.setPerfil({ sexo: "hombre", edad: 30, peso: 80, altura: 180, actividad: "moderado", objetivo: "perder" });
+      var pf = store.get().perfil, peso = calc.num(pf.peso, 80);
+      var c = calc.calorias(pf), mac = calc.macros({ calorias: c.objetivo, peso: peso, protGkg: 2.0, grasaGkg: 0.8 });
+      store.setObjetivos({ calorias: c.objetivo, proteina: mac.prot.g, carbos: mac.carb.g, grasas: mac.grasa.g });
+      [["desayuno", "Avena", 60, 233, 10, 40, 4], ["desayuno", "Huevo", 100, 155, 13, 1, 11],
+       ["almuerzo", "Pechuga de pollo", 200, 330, 62, 0, 7], ["almuerzo", "Arroz cocido", 200, 260, 5, 56, 1],
+       ["merienda", "Yogur natural", 200, 122, 7, 9, 7], ["cena", "Carne magra", 200, 500, 52, 0, 30]].forEach(function (x) {
+        store.addComida(hoy, { tipo: x[0], nombre: x[1], cant: x[2], kcal: x[3], prot: x[4], carb: x[5], grasa: x[6] });
+      });
+      store.setAgua(hoy, 2500); store.setPasos(hoy, 9000);
+      store.addCardio(hoy, { tipo: "trote", label: "Trote suave", minutos: 30, kcal: calc.kcalActividad(7, 30, peso, true) });
+      store.setPesoDia(hoy, 80);
+      var ej = [
+        { nombre: "Press banca", sets: [{ kg: 80, reps: 8 }, { kg: 80, reps: 7 }, { kg: 82.5, reps: 5 }] },
+        { nombre: "Remo con barra", sets: [{ kg: 70, reps: 10 }, { kg: 70, reps: 9 }] },
+        { nombre: "Press militar", sets: [{ kg: 45, reps: 8 }, { kg: 45, reps: 8 }] }
+      ];
+      var totalSets = ej.reduce(function (a, e) { return a + e.sets.length; }, 0);
+      store.guardarSesion({ fecha: hoy, rutinaNombre: "Push/Pull ejemplo", ejercicios: ej, duracion: calc.duracionSesion(totalSets), kcal: calc.kcalSesion(totalSets, null, peso) });
+      ui.toast("Día de ejemplo cargado", "good"); GYM.go("#/inicio"); GYM.refresh();
+    }, { ok: "Cargar ejemplo" });
+  }
+
   function borrar() {
     ui.confirmar("Se van a eliminar TODOS tus datos de este dispositivo (entrenamientos, comidas, peso…). Esto no se puede deshacer.", function () {
       ui.confirmar("¿Seguro? Última confirmación.", function () { store.borrarTodo(); ui.toast("Datos eliminados"); GYM.go("#/inicio"); GYM.refresh(); }, { danger: true, ok: "Sí, eliminar todo", titulo: "Confirmación final" });

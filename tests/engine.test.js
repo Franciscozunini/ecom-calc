@@ -88,6 +88,33 @@
     A.ok(prs.some(function (p) { return p.tipo === "peso" && p.valor === 90; }), "PR peso 90");
   });
 
+  /* ===== GASTO / BALANCE ===== */
+  test("kcal de actividad (MET, neto)", function () {
+    // (8-1)·3.5·80/200·30 = 294
+    A.aprox(calc.kcalActividad(8, 30, 80, true), 294, "cardio HIIT 30min 80kg", 1);
+    A.aprox(calc.kcalActividad(8, 30, 80, false), 336, "bruto", 1);
+  });
+  test("kcal de pasos (peso y altura)", function () {
+    // extra 6000, stride 0.747, km 4.482, kcal 179.3
+    A.aprox(calc.kcalPasos(10000, 80, 180), 179, "10k pasos 80kg 180cm", 2);
+    A.eq(calc.kcalPasos(3000, 80, 180), 0, "menos del baseline => 0");
+  });
+  test("kcal de sesión de musculación", function () {
+    // 12 series => 42 min; (5-1)·3.5·80/200·42 = 235.2
+    A.aprox(calc.kcalSesion(12, null, 80), 235, "12 series 80kg", 2);
+    A.eq(calc.duracionSesion(12), 42, "duración estimada");
+  });
+  test("balance del día (déficit)", function () {
+    var b = calc.balanceDia({ bmr: 1780, pasos: 10000, peso: 80, altura: 180, entrenoKcal: 235, cardioKcal: 294, comido: 2000 });
+    // base 2136 + pasos 179 + 235 + 294 = 2844 ; comido 2000 => déficit 844
+    A.aprox(b.gasto, 2844, "gasto estimado", 3);
+    A.ok(b.balance < 0, "balance negativo = déficit");
+    A.aprox(b.deficit, 844, "déficit", 3);
+  });
+  test("balance sin perfil => null", function () {
+    A.eq(calc.balanceDia({ bmr: 0 }), null, "sin bmr no calcula");
+  });
+
   /* ===== EDGE CASES ===== */
   test("Edge: ceros y vacíos no rompen", function () {
     A.eq(calc.oneRM(0, 0), 0, "1RM 0");

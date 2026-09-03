@@ -173,39 +173,57 @@
   function terminar(d) {
     var conSets = d.ejercicios.filter(function (e) { return (e.sets || []).some(function (s) { return calc.num(s.kg, 0) > 0 && calc.num(s.reps, 0) > 0; }); });
     if (!conSets.length) { ui.toast("Cargá al menos una serie con kg y reps"); return; }
-    // limpiar sets vacíos
     var limpio = conSets.map(function (e) {
       return { nombre: e.nombre, sets: e.sets.filter(function (s) { return calc.num(s.kg, 0) > 0 && calc.num(s.reps, 0) > 0; }).map(function (s) { return { kg: calc.num(s.kg, 0), reps: calc.num(s.reps, 0) }; }) };
     });
-    // PRs (comparar con historial ANTES de guardar)
     var prs = [];
     limpio.forEach(function (e) {
       var hist = store.historialEjercicio(e.nombre);
       var p = calc.detectarPRs(hist, { sets: e.sets });
       p.forEach(function (x) { x.ejercicio = e.nombre; prs.push(x); });
     });
-    var ses = store.guardarSesion({ fecha: d.fecha, rutinaId: d.rutinaId, rutinaNombre: d.rutinaNombre, ejercicios: limpio });
-    draft.clear();
-    resumen(ses, prs);
+    resumen(d, limpio, prs);
   }
 
-  function resumen(ses, prs) {
+  function resumen(d, limpio, prs) {
+    var totalSets = limpio.reduce(function (a, e) { return a + e.sets.length; }, 0);
+    var volumen = limpio.reduce(function (a, e) { return a + calc.volumenSesion(e.sets); }, 0);
+    var peso = calc.num(store.get().perfil.peso, 0) || 75;
+    var sinPeso = !calc.num(store.get().perfil.peso, 0);
+    var min = calc.duracionSesion(totalSets);
+
     var body = el("div");
     body.appendChild(el("div", { style: "text-align:center;margin-bottom:14px" }, [
       el("div", { style: "font-size:2.6rem", text: "💪" }),
       el("div", { style: "font-family:var(--disp);font-weight:800;font-size:1.3rem", text: "¡Entrenamiento terminado!" }),
-      el("div.muted", { text: (ses.ejercicios || []).length + " ejercicios · " + ui.n0(ses.volumen) + " kg de volumen" })
+      el("div.muted", { text: limpio.length + " ejercicios · " + ui.n0(volumen) + " kg de volumen" })
     ]));
-    if (prs.length) {
-      prs.forEach(function (p) {
-        body.appendChild(el("div.pr", { style: "margin-bottom:10px" }, [
-          el("div.tag", { text: "🔥 NUEVO PR — " + (p.tipo === "rm" ? "1RM ESTIMADO" : "PESO MÁXIMO") }),
-          el("div", { style: "font-weight:700;font-size:.95rem;margin:2px 0", text: p.ejercicio }),
-          el("div.v.num", { text: p.tipo === "rm" ? ui.n1(p.valor) + " kg" : ui.n1(p.kg) + " kg × " + p.reps })
-        ]));
-      });
-    }
-    body.appendChild(el("button.btn.btn-primary.btn-block", { style: "margin-top:12px", text: "Listo", onclick: function () { sh.close(); GYM.go("#/inicio"); } }));
+
+    if (prs.length) prs.forEach(function (p) {
+      body.appendChild(el("div.pr", { style: "margin-bottom:10px" }, [
+        el("div.tag", { text: "🔥 NUEVO PR — " + (p.tipo === "rm" ? "1RM ESTIMADO" : "PESO MÁXIMO") }),
+        el("div", { style: "font-weight:700;font-size:.95rem;margin:2px 0", text: p.ejercicio }),
+        el("div.v.num", { text: p.tipo === "rm" ? ui.n1(p.valor) + " kg" : ui.n1(p.kg) + " kg × " + p.reps })
+      ]));
+    });
+
+    // Duración + calorías estimadas
+    var minInp = el("input.input", { type: "text", inputmode: "numeric", value: min, style: "text-align:center;font-family:var(--disp);font-weight:700" });
+    var kcalOut = el("div.stat", { style: "text-align:right" }, [el("span.k", { text: "Quemaste (est.)" }), el("span.v.num#kcalq", { text: "—" })]);
+    function updKcal() { ui.$("#kcalq", kcalOut).textContent = ui.n0(calc.kcalSesion(totalSets, minInp.value, peso)) + " kcal"; }
+    minInp.addEventListener("input", updKcal);
+    body.appendChild(el("div.panel", { style: "margin-top:6px" }, [
+      el("div.between", {}, [ el("div.field", { style: "flex:1;margin-right:12px" }, [el("label", { text: "Duración (min)" }), minInp]), kcalOut ]),
+      sinPeso ? el("div.muted", { style: "font-size:11.5px;margin-top:8px", text: "Cargá tu peso en Perfil para una estimación más precisa (usamos 75 kg)." }) : null
+    ]));
+    updKcal();
+
+    body.appendChild(el("button.btn.btn-primary.btn-block", { style: "margin-top:14px", text: "Guardar entrenamiento", onclick: function () {
+      var mm = calc.num(minInp.value, 0) || min;
+      var kcal = calc.kcalSesion(totalSets, mm, peso);
+      store.guardarSesion({ fecha: d.fecha, rutinaId: d.rutinaId, rutinaNombre: d.rutinaNombre, ejercicios: limpio, duracion: mm, kcal: kcal });
+      draft.clear(); sh.close(); ui.toast("Entrenamiento guardado", "good"); GYM.go("#/inicio");
+    } }));
     var sh = ui.sheet(null, body);
   }
 

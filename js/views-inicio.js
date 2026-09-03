@@ -50,6 +50,9 @@
     hero.appendChild(heroRow);
     root.appendChild(hero);
 
+    // Balance del día (déficit/superávit)
+    root.appendChild(balanceCard(s, hoy, m, d));
+
     // Secundarias: agua / pasos / peso
     root.appendChild(el("div.grid.g3", {}, [
       miniStat("Agua", ui.n1(d.agua / 1000) + "L", pct(d.agua, g.agua), "#33d99b", "#/comida"),
@@ -95,6 +98,42 @@
 
     return root;
   };
+
+  function balanceCard(s, hoy, m, d) {
+    var pf = s.perfil;
+    var completo = pf.sexo && pf.peso && pf.altura && pf.edad;
+    var bmr = completo ? calc.bmr(pf.sexo, calc.num(pf.peso), calc.num(pf.altura), calc.num(pf.edad)) : 0;
+    var bal = calc.balanceDia({ bmr: bmr, pasos: d.pasos, peso: pf.peso, altura: pf.altura, entrenoKcal: store.entrenoKcalDia(hoy), cardioKcal: store.cardioKcalDia(hoy), comido: m.kcal });
+    if (!bal) {
+      return el("a.panel", { href: "#/mas", style: "display:block;margin-top:14px" }, [
+        el("div", { style: "font-weight:700", text: "Balance del día" }),
+        el("div.muted", { style: "font-size:12.5px", text: "Completá tu perfil (peso, altura, edad) para ver tu déficit estimado." })
+      ]);
+    }
+    var deficit = bal.balance < 0;
+    var estado = deficit ? "Déficit" : (bal.balance > 0 ? "Superávit" : "En equilibrio");
+    var color = deficit ? "var(--good)" : (bal.balance > 0 ? "var(--accent-2)" : "var(--ink)");
+    var card = el("div.panel", { style: "margin-top:14px" });
+    card.appendChild(el("div.between", { style: "margin-bottom:8px" }, [
+      el("div.eyebrow", { text: "Balance del día" }),
+      el("span.muted", { style: "font-size:11.5px", text: "estimado" })
+    ]));
+    card.appendChild(el("div", { style: "display:flex;align-items:baseline;gap:8px" }, [
+      el("span.num", { text: estado === "En equilibrio" ? estado : (estado + " de " + ui.n0(Math.abs(bal.balance)) + " kcal"), style: "font-size:1.7rem;font-weight:800;color:" + color })
+    ]));
+    card.appendChild(el("div.muted", { style: "font-size:12.5px;margin-top:4px", html: "Gasto estimado <b class='num' style='color:var(--ink)'>" + ui.n0(bal.gasto) + "</b> · comiste <b class='num' style='color:var(--ink)'>" + ui.n0(bal.comido) + "</b> kcal" }));
+    // desglose del gasto
+    card.appendChild(el("div.wrap-gap", { style: "margin-top:10px" }, [
+      chip("Base " + ui.n0(bal.base)), chip("Pasos " + ui.n0(bal.pasosKcal)),
+      chip("Entreno " + ui.n0(bal.entrenoKcal)), chip("Cardio " + ui.n0(bal.cardioKcal))
+    ]));
+    card.appendChild(el("details.calc-detail", { style: "margin-top:12px;border:0;background:transparent" }, [
+      el("summary", { style: "padding:6px 0;background:transparent;color:var(--ink-mute);font-size:12px", text: "¿Cómo se calcula?" }),
+      el("div.muted", { style: "font-size:12px;line-height:1.5;padding:4px 0", text: "Gasto = metabolismo base (×1,2) + calorías de tus pasos, entreno y cardio. Balance = lo que comiste menos ese gasto. Todo es una estimación con fórmulas estándar (MET); los primeros ~4.000 pasos ya están en el gasto base." })
+    ]));
+    return card;
+  }
+  function chip(t) { return el("span.chip", { text: t }); }
 
   function metricLine(lab, val, goal, unit, tone) {
     return el("div", { style: "margin-bottom:8px" }, [

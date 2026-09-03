@@ -1,0 +1,12 @@
+{
+  "name": "GymBox",
+  "short_name": "GymBox",
+  "description": "Tu gym, tus datos, tu progreso. Registrá entrenamientos, comidas y progreso — sin cuenta.",
+  "start_url": "app.html",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "icons": [
+    { "src": "assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

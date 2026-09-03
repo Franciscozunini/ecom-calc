@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://macrofacil.com/</loc>
-    <lastmod>2026-09-03</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <url><loc>https://gymbox.app/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://gymbox.app/calculadora-calorias.html</loc><lastmod>2026-09-05</lastmod><priority>0.8</priority></url>
+  <url><loc>https://gymbox.app/calculadora-macros.html</loc><lastmod>2026-09-05</lastmod><priority>0.8</priority></url>
+  <url><loc>https://gymbox.app/calculadora-1rm.html</loc><lastmod>2026-09-05</lastmod><priority>0.8</priority></url>
   <!--
-    Cuando publiques más herramientas, agregá una <url> por cada una:
-    /calculadora-1rm, /arma-tu-plato, /calculadora-agua, /calculadora-imc, /grasa-corporal
+    Próximas páginas SEO (misma estructura, reutilizan js/calc.js):
+    /calculadora-proteina, /calculadora-agua, /calculadora-imc,
+    /calculadora-peso-ideal, /calculadora-peso-discos,
+    /tracker-entrenamiento, /tracker-peso, /tracker-comidas
   -->
 </urlset>

@@ -1,23 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f1e18"/>
-      <stop offset="1" stop-color="#0b0f19"/>
-    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14171c"/><stop offset="1" stop-color="#0b0d10"/></linearGradient>
+    <radialGradient id="glow" cx="85%" cy="15%" r="55%"><stop offset="0" stop-color="#ff5b2e" stop-opacity="0.35"/><stop offset="1" stop-color="#ff5b2e" stop-opacity="0"/></radialGradient>
   </defs>
-  <rect width="1200" height="630" fill="#0b0f19"/>
-  <rect width="1200" height="630" fill="url(#g)"/>
-  <g transform="translate(90,86)">
-    <rect width="60" height="60" rx="16" fill="#059669"/>
-    <path d="M30 14c-5 5-8 8-8 13a8 8 0 0 0 16 0c0-5-3-8-8-13z" fill="none" stroke="#fff" stroke-width="3.4" stroke-linejoin="round"/>
-    <text x="80" y="42" fill="#f3f5f9" font-family="Manrope, Arial, sans-serif" font-size="34" font-weight="800">MacroFácil</text>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g transform="translate(88,84)">
+    <rect width="58" height="58" rx="15" fill="#14171c" stroke="#262b33"/>
+    <g transform="translate(29,29)" fill="none" stroke="#ff5b2e" stroke-width="5" stroke-linecap="round">
+      <rect x="-21" y="-8" width="7" height="16" rx="2"/><rect x="14" y="-8" width="7" height="16" rx="2"/><path d="M-14 0h28"/>
+    </g>
+    <text x="76" y="40" fill="#f4f6f8" font-family="Sora, Arial, sans-serif" font-size="36" font-weight="800">GymBox</text>
   </g>
-  <text x="90" y="272" fill="#ffffff" font-family="Georgia, serif" font-size="64" font-weight="600">Calculadora de</text>
-  <text x="90" y="346" fill="#34d399" font-family="Georgia, serif" font-size="64" font-weight="600">calorías y macros</text>
-  <text x="90" y="428" fill="#c2c9d6" font-family="Manrope, Arial, sans-serif" font-size="29">Cuántas calorías y cuánta proteína, carbos y grasa</text>
-  <text x="90" y="466" fill="#c2c9d6" font-family="Manrope, Arial, sans-serif" font-size="29">necesitás según tu objetivo. Gratis y sin registro.</text>
-  <g transform="translate(90,506)">
-    <rect width="270" height="48" rx="24" fill="#059669"/>
-    <text x="135" y="31" fill="#fff" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="21" font-weight="700">Bajar · Mantener · Ganar</text>
-  </g>
+  <text x="90" y="286" fill="#f4f6f8" font-family="Sora, Arial, sans-serif" font-size="82" font-weight="800" letter-spacing="-3">Tu gym. Tus datos.</text>
+  <text x="90" y="372" fill="#ff5b2e" font-family="Sora, Arial, sans-serif" font-size="82" font-weight="800" letter-spacing="-3">Tu progreso.</text>
+  <text x="90" y="452" fill="#b7bec9" font-family="Inter, Arial, sans-serif" font-size="30">Entrenamientos, calorías, macros, peso y PRs.</text>
+  <text x="90" y="496" fill="#b7bec9" font-family="Inter, Arial, sans-serif" font-size="30">Todo en tu navegador, sin cuenta. Gratis.</text>
 </svg>

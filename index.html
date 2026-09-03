@@ -2,347 +2,133 @@
 <html lang="es-AR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- ===== SEO ===== -->
-  <title>Calculadora de calorías y macros gratis | MacroFácil</title>
-  <meta name="description" content="Calculá cuántas calorías y cuántos gramos de proteína, carbohidratos y grasa necesitás por día según tu objetivo: bajar grasa, mantener o ganar músculo. Gratis y sin registro." />
-  <link rel="canonical" href="https://macrofacil.com/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>GymBox — Tu gym, tus datos, tu progreso | Gratis y sin cuenta</title>
+  <meta name="description" content="Registrá entrenamientos, series, pesos, calorías, macros, agua, pasos y peso corporal. Todo guardado en tu navegador, sin cuenta y sin instalar nada. Gratis." />
+  <link rel="canonical" href="https://gymbox.app/" />
   <meta name="robots" content="index, follow" />
-  <meta name="theme-color" content="#0b0f19" />
-
+  <meta name="theme-color" content="#0b0d10" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="MacroFácil" />
-  <meta property="og:title" content="Calculadora de calorías y macros" />
-  <meta property="og:description" content="Descubrí tus calorías diarias y tus macros (proteína, carbos y grasa) según tu objetivo. Gratis, sin registro." />
-  <meta property="og:url" content="https://macrofacil.com/" />
+  <meta property="og:site_name" content="GymBox" />
+  <meta property="og:title" content="GymBox — Tu gym, tus datos, tu progreso" />
+  <meta property="og:description" content="Registrá cada serie, cada kilo y cada comida. Todo en un solo lugar, sin cuenta." />
+  <meta property="og:url" content="https://gymbox.app/" />
+  <meta property="og:image" content="https://gymbox.app/assets/og-image.png" />
   <meta property="og:locale" content="es_AR" />
-  <meta property="og:image" content="https://macrofacil.com/assets/og-image.png" />
-
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Calculadora de calorías y macros" />
-  <meta name="twitter:description" content="Tus calorías y macros diarios según tu objetivo. Gratis y sin registro." />
-  <meta name="twitter:image" content="https://macrofacil.com/assets/og-image.png" />
-
+  <meta name="twitter:title" content="GymBox — Tu gym, tus datos, tu progreso" />
+  <meta name="twitter:image" content="https://gymbox.app/assets/og-image.png" />
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" />
-
-  <link rel="stylesheet" href="styles.css?v=20260904" />
-
-  <!-- JSON-LD: WebApplication -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" />
+  <link rel="stylesheet" href="styles.css?v=20260905" />
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "MacroFácil — Calculadora de calorías y macros",
-    "url": "https://macrofacil.com/",
-    "applicationCategory": "HealthApplication",
-    "operatingSystem": "Web",
-    "description": "Calculadora gratuita de calorías diarias y macronutrientes (proteína, carbohidratos y grasa) según objetivo, con fórmula Mifflin-St Jeor.",
-    "inLanguage": "es-AR",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "ARS" }
-  }
+  {"@context":"https://schema.org","@type":"WebApplication","name":"GymBox","url":"https://gymbox.app/","applicationCategory":"HealthApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"ARS"},"description":"App web gratuita para registrar entrenamientos, comidas y progreso. 100% en el navegador, sin cuenta."}
   </script>
-
-  <!-- JSON-LD: FAQPage -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      { "@type": "Question", "name": "¿Cómo calcular cuántas calorías necesito por día?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Se calcula tu metabolismo basal (BMR) con la fórmula Mifflin-St Jeor a partir de tu sexo, edad, peso y altura, y se multiplica por un factor de actividad para obtener tu gasto total diario (TDEE). Según tu objetivo se le resta o suma un porcentaje: déficit para bajar grasa, superávit para ganar músculo." } },
-      { "@type": "Question", "name": "¿Cuánta proteína tengo que comer por día?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Una referencia habitual para personas activas es entre 1,6 y 2,2 gramos de proteína por kilo de peso corporal. La calculadora te deja elegir el nivel y te da los gramos exactos según tu peso." } },
-      { "@type": "Question", "name": "¿Qué son los macros?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Los macronutrientes (macros) son proteínas, carbohidratos y grasas. Cada gramo de proteína y de carbohidrato aporta 4 calorías, y cada gramo de grasa aporta 9. Repartir tus calorías entre estos tres macros define tu plan de alimentación." } },
-      { "@type": "Question", "name": "¿Cuántas calorías para bajar de peso?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Para bajar grasa necesitás un déficit calórico: comer menos calorías que tu gasto total. Un déficit del 10 al 20 % del TDEE suele ser sostenible. La calculadora te muestra ese número según la intensidad que elijas." } },
-      { "@type": "Question", "name": "¿La calculadora reemplaza a un nutricionista?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. Es una estimación orientativa basada en fórmulas estándar. Las necesidades reales varían por persona. Ante dudas o condiciones de salud, consultá con un profesional." } }
-    ]
-  }
-  </script>
-
-  <!-- TODO ANALYTICS: pegá acá tu etiqueta de Google Analytics (GA4). El sitio funciona sin Analytics. -->
-  <!-- TODO COOKIES: si activás AdSense/Analytics, agregá acá tu banner de consentimiento (CMP). -->
+  <!-- TODO ANALYTICS · TODO COOKIES (CMP para AdSense) -->
 </head>
-
 <body>
-  <a class="skip-link" href="#calculadora">Saltar a la calculadora</a>
-
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="/" aria-label="MacroFácil — inicio">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 2 8h10c0-3 2-5 2-8a7 7 0 0 0-7-7z"/><path d="M9 22h6"/></svg>
-        </span>
-        <span class="brand-name">Macro<span class="brand-accent">Fácil</span></span>
+  <header class="lp-header">
+    <div class="in">
+      <a class="brand" href="/" aria-label="GymBox">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="9" width="3.5" height="6" rx="1"/><rect x="18.5" y="9" width="3.5" height="6" rx="1"/><path d="M5.5 12h13"/></svg></span>
+        <span class="brand-name">Gym<b>Box</b></span>
       </a>
-      <nav class="header-nav" aria-label="Secciones">
-        <a href="#guias" class="nav-link">Cómo funciona</a>
-        <a href="#faq" class="nav-link">Preguntas</a>
-      </nav>
+      <a class="btn btn-primary btn-sm" href="app.html">Abrir app</a>
     </div>
   </header>
 
   <main>
-    <section class="hero" id="calculadora">
-      <div class="container">
-        <h1 class="hero-title">Calculadora de calorías y macros</h1>
-        <p class="hero-sub">
-          Descubrí <strong>cuántas calorías</strong> y <strong>cuántos gramos de proteína,
-          carbohidratos y grasa</strong> necesitás por día según tu objetivo.
-        </p>
-
-        <div class="tool-grid">
-          <!-- FORM -->
-          <form class="tool-card" id="form-calc" novalidate autocomplete="off">
-            <span class="step-chip">Gratis · sin registro · privado</span>
-
-            <div class="field">
-              <span class="field-label">Sexo <span class="req">*</span></span>
-              <div class="segmented" role="radiogroup" aria-label="Sexo">
-                <label><input type="radio" name="sexo" value="hombre"><span>Hombre</span></label>
-                <label><input type="radio" name="sexo" value="mujer"><span>Mujer</span></label>
-              </div>
-              <small class="hint">Se usa en la fórmula del metabolismo. No guardamos nada.</small>
-              <small class="err" data-err="sexo" role="alert"></small>
-            </div>
-
-            <div class="field-row">
-              <div class="field">
-                <label for="edad">Edad</label>
-                <div class="input-unit" data-unit="años"><input id="edad" name="edad" type="text" inputmode="numeric" placeholder="0" /></div>
-                <small class="err" data-err="edad" role="alert"></small>
-              </div>
-              <div class="field">
-                <label for="peso">Peso</label>
-                <div class="input-unit" data-unit="kg"><input id="peso" name="peso" type="text" inputmode="decimal" placeholder="0" /></div>
-                <small class="err" data-err="peso" role="alert"></small>
-              </div>
-              <div class="field">
-                <label for="altura">Altura</label>
-                <div class="input-unit" data-unit="cm"><input id="altura" name="altura" type="text" inputmode="numeric" placeholder="0" /></div>
-                <small class="err" data-err="altura" role="alert"></small>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="actividad">Nivel de actividad</label>
-              <select id="actividad" name="actividad"></select>
-            </div>
-
-            <div class="field">
-              <label for="objetivo">Tu objetivo</label>
-              <select id="objetivo" name="objetivo"></select>
-            </div>
-
-            <details class="acc" id="acc-avz">
-              <summary class="acc-sum">
-                <span class="acc-num">+</span>
-                <span class="acc-title">Ajustes avanzados (opcional)</span>
-                <svg class="acc-caret" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-              </summary>
-              <div class="acc-body">
-                <div class="field-row">
-                  <div class="field">
-                    <label for="proteinaNivel">Nivel de proteína</label>
-                    <select id="proteinaNivel" name="proteinaNivel"></select>
-                    <small class="hint">Gramos de proteína por kilo de peso.</small>
-                  </div>
-                  <div class="field">
-                    <label for="grasaPct">Grasa (% de calorías)</label>
-                    <div class="input-unit" data-unit="%"><input id="grasaPct" name="grasaPct" type="text" inputmode="numeric" placeholder="25" /></div>
-                    <small class="hint">Por defecto 25 %. Entre 15 % y 45 %.</small>
-                    <small class="err" data-err="grasaPct" role="alert"></small>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <div class="actions">
-              <button type="submit" class="btn btn-primary" id="btn-calcular">Calcular mis macros</button>
-              <button type="button" class="btn btn-ghost" id="btn-limpiar">Limpiar</button>
-            </div>
-            <p class="live-note">El resultado se actualiza solo mientras completás.</p>
-          </form>
-
-          <!-- RESULTS -->
-          <div class="results" id="resultados" aria-live="polite">
-            <div class="results-empty" id="results-empty">
-              <div class="empty-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 2 8h10c0-3 2-5 2-8a7 7 0 0 0-7-7z"/><path d="M9 22h6"/></svg>
-              </div>
-              <h2>Tus calorías y macros aparecen acá</h2>
-              <p>Completá tus datos y te decimos cuánto comer por día según tu objetivo.</p>
-            </div>
-
-            <div class="results-full" id="results-full" hidden>
-              <!-- Calorías -->
-              <div class="cal-hero">
-                <p class="cal-pre" id="r-cal-sub">Para tu objetivo…</p>
-                <div class="cal-big"><span id="r-calorias">—</span> <span class="cal-unit">kcal/día</span></div>
-                <p class="cal-note" id="r-cal-note"></p>
-              </div>
-
-              <!-- Macros -->
-              <div class="macros" id="macros">
-                <div class="macro macro--prot">
-                  <span class="macro-nombre">Proteína</span>
-                  <span class="macro-g" id="r-prot-g">—</span>
-                  <span class="macro-meta"><span id="r-prot-kcal">—</span> · <span id="r-prot-pct">—</span></span>
-                  <span class="macro-bar"><span class="macro-bar-fill" id="bar-prot"></span></span>
-                </div>
-                <div class="macro macro--carb">
-                  <span class="macro-nombre">Carbohidratos</span>
-                  <span class="macro-g" id="r-carb-g">—</span>
-                  <span class="macro-meta"><span id="r-carb-kcal">—</span> · <span id="r-carb-pct">—</span></span>
-                  <span class="macro-bar"><span class="macro-bar-fill" id="bar-carb"></span></span>
-                </div>
-                <div class="macro macro--grasa">
-                  <span class="macro-nombre">Grasa</span>
-                  <span class="macro-g" id="r-grasa-g">—</span>
-                  <span class="macro-meta"><span id="r-grasa-kcal">—</span> · <span id="r-grasa-pct">—</span></span>
-                  <span class="macro-bar"><span class="macro-bar-fill" id="bar-grasa"></span></span>
-                </div>
-              </div>
-              <p class="carbos-aviso" id="carbos-aviso" hidden>⚠️ Con tanta proteína y grasa para estas calorías, no quedan carbohidratos. Bajá la grasa o el nivel de proteína.</p>
-
-              <aside class="ad-slot" aria-label="Publicidad"><span>Publicidad</span><!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE --></aside>
-
-              <!-- Cifras clave -->
-              <div class="kpis">
-                <div class="kpi"><span class="kpi-label">Mantenimiento (TDEE)</span><span class="kpi-value" id="r-tdee">—</span></div>
-                <div class="kpi"><span class="kpi-label">Metabolismo basal (BMR)</span><span class="kpi-value" id="r-bmr">—</span></div>
-                <div class="kpi"><span class="kpi-label">IMC</span><span class="kpi-value" id="r-imc">—</span></div>
-                <div class="kpi"><span class="kpi-label">Por comida (de 4)</span><span class="kpi-value" id="r-comida">—</span></div>
-              </div>
-              <div class="imc-line" id="imc-line" hidden></div>
-
-              <details class="calc-detail" id="como-calculo">
-                <summary>
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                  Cómo se calculó (con tus datos)
-                </summary>
-                <div class="calc-steps" id="calc-steps"></div>
-              </details>
-
-              <button type="button" class="btn btn-ghost btn-block" id="btn-reset-vista">Empezar de nuevo</button>
-            </div>
-          </div>
-        </div>
-
-        <p class="privacy-badge">
-          🔒 100 % privado — todo se calcula en tu navegador. No se sube ni se guarda ningún
-          dato, y funciona sin conexión después de la primera carga.
-        </p>
+    <section class="lp-hero">
+      <div class="eyebrow">Sin cuenta · sin instalar · gratis</div>
+      <h1>Tu gym.<br>Tus datos.<br><span class="o">Tu progreso.</span></h1>
+      <p>Registrá cada serie, cada kilo y cada comida. Entrenamientos, calorías, macros, agua, pasos y peso corporal — todo en un solo lugar, guardado en tu navegador.</p>
+      <div class="lp-cta">
+        <a class="btn btn-primary btn-lg" href="app.html">Empezar gratis</a>
+        <span class="lp-note">No pedimos email. Tus datos no salen de tu dispositivo.</span>
       </div>
     </section>
 
-    <div class="container">
-      <aside class="ad-slot ad-leaderboard" aria-label="Publicidad"><span>Publicidad</span><!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE --></aside>
+    <!-- Composición del producto (mock real con el mismo diseño) -->
+    <div class="lp-mock">
+      <div class="lp-mockframe" style="padding:18px">
+        <div class="between" style="margin-bottom:12px">
+          <div><div class="eyebrow">Hoy</div><div class="num" style="font-weight:800;font-size:1.3rem">Miércoles</div></div>
+          <span class="chip on">Push ✓</span>
+        </div>
+        <div class="hero-stat" style="margin-bottom:12px">
+          <div class="glow"></div>
+          <div class="row" style="gap:18px;align-items:center">
+            <div class="ring" style="--sz:120px">
+              <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="50" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="50" fill="none" stroke-width="10" stroke-dasharray="314" stroke-dashoffset="82"/></svg>
+              <div class="center"><div class="big num">1.720</div><div class="lab">de 2.100 kcal</div></div>
+            </div>
+            <div style="flex:1">
+              <div class="eyebrow">Volumen de hoy</div>
+              <div class="num" style="font-size:2rem;font-weight:800">8.240 <small style="font-size:.5em;color:var(--ink-mute)">kg</small></div>
+              <div class="pr" style="margin-top:10px;padding:10px 12px"><div class="tag">🔥 NUEVO PR — PRESS BANCA</div><div class="num" style="font-weight:800;font-size:1.1rem">95 kg × 5</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid g3">
+          <div class="panel" style="padding:12px"><div class="stat"><span class="k">Proteína</span><span class="v num">165<small> g</small></span></div></div>
+          <div class="panel" style="padding:12px"><div class="stat"><span class="k">Agua</span><span class="v num">2,1<small> L</small></span></div></div>
+          <div class="panel" style="padding:12px"><div class="stat"><span class="k">Peso</span><span class="v num">84,2</span></div></div>
+        </div>
+      </div>
     </div>
 
-    <!-- CONTENIDO SEO -->
-    <section class="content" id="guias">
-      <div class="container content-inner">
+    <section class="lp-section">
+      <div class="section-h"><h2 style="font-size:1.4rem">Todo lo que hacés en el gym, en una sola pantalla</h2></div>
+      <div class="lp-features">
+        <div class="lp-feat"><div class="fi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="9" width="3.5" height="6" rx="1"/><rect x="18.5" y="9" width="3.5" height="6" rx="1"/><path d="M5.5 12h13"/></svg></div><h3>Registro de entrenamiento</h3><p>Cargá series, kilos y reps. Te mostramos qué hiciste la última vez y el volumen total en vivo.</p></div>
+        <div class="lp-feat"><div class="fi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5L12 16l-5 2.7 1-5.5-4-3.9 5.5-.8z"/></svg></div><h3>PRs y 1RM automáticos</h3><p>Detectamos tus récords solos y estimamos tu 1RM. Los PR se sienten como un logro.</p></div>
+        <div class="lp-feat"><div class="fi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v18M17 3c-1.5 0-3 1.5-3 5s1.5 4 3 4 3-1 3-4-1.5-5-3-5zM17 12v9"/></svg></div><h3>Comidas y macros</h3><p>Sumá calorías y macros con una base de alimentos. Mirá cuánto te falta para tu objetivo.</p></div>
+        <div class="lp-feat"><div class="fi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M6 14l4-4 3 3 5-6"/></svg></div><h3>Peso y progreso</h3><p>Gráficos limpios de peso corporal, fuerza y volumen semanal. Tu evolución de un vistazo.</p></div>
+        <div class="lp-feat"><div class="fi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Agua, pasos y timer</h3><p>Sumá agua con un toque, cargá tus pasos y usá el timer de descanso entre series.</p></div>
+        <div class="lp-feat"><div class="fi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><h3>100% privado</h3><p>Todo se guarda en tu navegador. Sin cuenta, sin servidores. Exportás tus datos cuando quieras.</p></div>
+      </div>
+    </section>
 
-        <article class="prose">
-          <h2>¿Cómo calcular cuántas calorías necesito por día?</h2>
-          <p>
-            Tu cuerpo quema calorías incluso en reposo: es tu <strong>metabolismo basal (BMR)</strong>.
-            Lo estimamos con la fórmula <strong>Mifflin-St Jeor</strong>, la más usada y precisa para
-            la mayoría de las personas, a partir de tu sexo, edad, peso y altura.
-          </p>
-          <p>
-            A ese BMR lo multiplicamos por un <strong>factor de actividad</strong> (cuánto te movés y
-            entrenás) y obtenemos tu <strong>gasto total diario (TDEE)</strong>: las calorías que
-            necesitás para mantener tu peso.
-          </p>
-          <p class="formula-line">Calorías objetivo = BMR × actividad × (1 ± ajuste del objetivo)</p>
-          <ul class="cost-list">
-            <li><strong>Bajar grasa:</strong> comés por debajo de tu TDEE (déficit del 10 al 20 %).</li>
-            <li><strong>Mantener:</strong> comés tu TDEE.</li>
-            <li><strong>Ganar músculo:</strong> comés por encima (superávit del 10 al 15 %).</li>
-          </ul>
-        </article>
+    <section class="lp-section" style="padding-top:0">
+      <div class="section-h"><h2 style="font-size:1.4rem">Calculadoras fitness</h2></div>
+      <p class="muted" style="margin-bottom:14px">Herramientas rápidas, también sin cuenta:</p>
+      <div class="lp-list">
+        <a class="chip" href="calculadora-calorias.html">Calculadora de calorías</a>
+        <a class="chip" href="calculadora-macros.html">Calculadora de macros</a>
+        <a class="chip" href="calculadora-1rm.html">Calculadora de 1RM</a>
+        <a class="chip" href="app.html#/calc/proteina">Proteína</a>
+        <a class="chip" href="app.html#/calc/agua">Agua</a>
+        <a class="chip" href="app.html#/calc/imc">IMC</a>
+        <a class="chip" href="app.html#/calc/discos">Discos de la barra</a>
+      </div>
+    </section>
 
-        <article class="prose">
-          <h2>¿Qué son los macros y para qué sirven?</h2>
-          <p>Las calorías se reparten en tres <strong>macronutrientes</strong>:</p>
-          <div class="compare">
-            <div class="compare-card"><h3>Proteína</h3><p>4 kcal por gramo. Construye y conserva músculo. Referencia: 1,6 a 2,2 g por kilo de peso.</p></div>
-            <div class="compare-card"><h3>Carbohidratos</h3><p>4 kcal por gramo. Tu principal fuente de energía para entrenar y rendir.</p></div>
-            <div class="compare-card"><h3>Grasa</h3><p>9 kcal por gramo. Clave para hormonas y salud. No bajes de ~0,6 g por kilo.</p></div>
-          </div>
-          <p>Dos personas con las mismas calorías pueden tener macros muy distintos según su objetivo. Por eso repartirlos bien es lo que hace la diferencia.</p>
-        </article>
-
-        <aside class="ad-slot" aria-label="Publicidad"><span>Publicidad</span><!-- PEGA AQUÍ TU CÓDIGO DE ADSENSE --></aside>
-
-        <article class="prose">
-          <h2>¿Cuánta proteína necesito?</h2>
-          <p>
-            Para quienes entrenan, una referencia habitual es <strong>1,6 a 2,2 gramos de proteína por
-            kilo de peso corporal</strong>. Más proteína ayuda a mantener el músculo, sobre todo en
-            déficit. La calculadora te da los gramos exactos según tu peso y el nivel que elijas.
-          </p>
-        </article>
-
-        <article class="prose faq" id="faq">
-          <h2>Preguntas frecuentes</h2>
-          <details class="faq-item"><summary>¿Cómo calcular cuántas calorías necesito por día?</summary><p>Calculamos tu metabolismo basal con Mifflin-St Jeor (sexo, edad, peso, altura) y lo multiplicamos por tu factor de actividad para el gasto total (TDEE). Según tu objetivo se resta o suma un porcentaje.</p></details>
-          <details class="faq-item"><summary>¿Cuántas calorías para bajar de peso?</summary><p>Necesitás un déficit: comer menos que tu TDEE. Un 10 a 20 % menos suele ser sostenible. La calculadora te muestra el número exacto según la intensidad que elijas.</p></details>
-          <details class="faq-item"><summary>¿Cuánta proteína tengo que comer?</summary><p>Entre 1,6 y 2,2 g por kilo de peso para personas activas. Elegí el nivel y te damos los gramos.</p></details>
-          <details class="faq-item"><summary>¿Qué son los macros?</summary><p>Proteínas, carbohidratos y grasas. Proteína y carbos aportan 4 kcal/g; la grasa, 9 kcal/g.</p></details>
-          <details class="faq-item"><summary>¿Qué fórmula usan?</summary><p>Mifflin-St Jeor para el metabolismo basal y los factores de actividad estándar para el gasto total. Son fórmulas reconocidas, no valores inventados.</p></details>
-          <details class="faq-item"><summary>¿Reemplaza a un nutricionista?</summary><p>No. Es una estimación orientativa. Las necesidades reales varían por persona; ante dudas o condiciones de salud, consultá con un profesional.</p></details>
-        </article>
-
-        <div class="disclaimer" role="note">
-          <strong>Aviso:</strong> esta herramienta es orientativa y no constituye asesoramiento médico
-          ni nutricional. Los cálculos son estimaciones basadas en fórmulas estándar y pueden no
-          reflejar tus necesidades reales. Consultá con un profesional de la salud antes de hacer
-          cambios importantes en tu alimentación o entrenamiento.
-        </div>
-
-        <section class="more-tools">
-          <h2>Más calculadoras (próximamente)</h2>
-          <div class="tools-grid">
-            <span class="tool-pill">Calculadora de 1RM (peso máximo)</span>
-            <span class="tool-pill">Armá tu plato: proteína y calorías</span>
-            <span class="tool-pill">Calculadora de agua diaria</span>
-            <span class="tool-pill">Calculadora de IMC</span>
-            <span class="tool-pill">Calculadora de grasa corporal</span>
-          </div>
-        </section>
+    <section class="lp-section" style="text-align:center;padding-top:0">
+      <div class="panel" style="padding:34px 20px;background:linear-gradient(160deg,var(--surface-2),var(--surface))">
+        <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,5vw,2.2rem)">Empezá hoy tu primer registro</h2>
+        <p class="muted" style="max-width:40ch;margin:10px auto 18px">Gratis, sin instalar nada y sin dar tu email. Abrilo y registrá tu primera serie.</p>
+        <a class="btn btn-primary btn-lg" href="app.html">Empezar gratis</a>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <span class="brand-name">Macro<span class="brand-accent">Fácil</span></span>
-        <p>Calculadora de calorías y macros. Gratis, sin registro y privada.</p>
-        <p class="footer-indep">Herramienta orientativa. No reemplaza el consejo de un profesional de la salud.</p>
+  <footer class="lp-foot">
+    <div class="in">
+      <div>
+        <span class="brand-name">Gym<b>Box</b></span>
+        <div class="muted" style="margin-top:6px;max-width:40ch">Tu gym en un solo lugar. Herramienta orientativa, no reemplaza el consejo de un profesional de la salud.</div>
       </div>
-      <nav class="footer-nav" aria-label="Enlaces legales">
+      <nav class="lp-list">
+        <a href="app.html">Abrir app</a>
         <a href="privacidad.html">Privacidad</a>
         <a href="aviso-legal.html">Aviso legal</a>
-        <a href="#calculadora">Calculadora</a>
-        <a href="#faq">Preguntas</a>
+        <a href="calculadora-calorias.html">Calorías</a>
       </nav>
     </div>
-    <div class="container footer-copy"><span>© <span id="year">2026</span> MacroFácil</span></div>
+    <div class="in" style="padding-top:0"><span class="muted" style="font-size:12px">© <span id="y">2026</span> GymBox</span></div>
   </footer>
-
-  <script defer src="calorias.js?v=20260904"></script>
-  <script defer src="lib/manifest.js?v=20260904"></script>
-  <script defer src="main.js?v=20260904"></script>
+  <script>document.getElementById("y").textContent=new Date().getFullYear();</script>
 </body>
 </html>

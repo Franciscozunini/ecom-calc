@@ -155,19 +155,36 @@
   }
 
   function agregarEjercicio(d) {
-    var nombres = store.nombresEjercicios();
-    var inp = el("input.input", { type: "text", placeholder: "Ej: Press banca", list: "ej-datalist", autocomplete: "off" });
-    var dl = el("datalist#ej-datalist", {}, nombres.map(function (n) { return el("option", { value: n }); }));
-    var body = el("div", {}, [
-      el("div.field", {}, [el("label", { text: "Nombre del ejercicio" }), inp, dl]),
-      el("button.btn.btn-primary.btn-block", { style: "margin-top:14px", text: "Agregar", onclick: function () {
-        var nom = inp.value.trim();
-        if (!nom) { ui.toast("Escribí un nombre"); return; }
-        d.ejercicios.push({ nombre: nom, sets: [{ kg: "", reps: "" }] });
-        draft.set(d); sh.close(); GYM.refresh();
-      } })
-    ]);
-    var sh = ui.sheet("Agregar ejercicio", body);
+    pickerEjercicio(function (nombre) {
+      d.ejercicios.push({ nombre: nombre, sets: [{ kg: "", reps: "" }] });
+      draft.set(d); GYM.refresh();
+    });
+  }
+
+  // Buscador de ejercicios (catálogo local + tus ejercicios). Llama onPick(nombre).
+  function pickerEjercicio(onPick) {
+    var cat = (GYM.ejercicios && GYM.ejercicios.buscar) ? GYM.ejercicios : null;
+    var inp = el("input.input", { type: "text", placeholder: "Buscá: isquio, prensa, press…", autocomplete: "off" });
+    var lista = el("div", { style: "max-height:320px;overflow-y:auto;margin-top:10px" });
+    function pintar() {
+      var q = inp.value.trim();
+      var items = cat ? cat.buscar(q, store.nombresEjercicios())
+        : store.nombresEjercicios().filter(function (n) { return !q || n.toLowerCase().indexOf(q.toLowerCase()) > -1; }).map(function (n) { return { g: "Ejercicios", n: n }; });
+      lista.innerHTML = "";
+      var lastG = null;
+      items.forEach(function (it) {
+        if (it.g !== lastG) { lastG = it.g; lista.appendChild(el("div.eyebrow", { text: it.g, style: "margin:10px 0 3px" })); }
+        lista.appendChild(el("button.lrow.tap", { style: "width:100%;text-align:left;padding:9px 8px", onclick: function () { sh.close(); onPick(it.n); } },
+          [el("div.main", {}, [el("div.t", { text: it.n })])]));
+      });
+      var exact = items.some(function (it) { return (cat ? cat.norm(it.n) : it.n.toLowerCase()) === (cat ? cat.norm(q) : q.toLowerCase()); });
+      if (q && !exact) lista.appendChild(el("button.fab-add", { style: "margin-top:10px", text: "+ Agregar «" + q + "»", onclick: function () { sh.close(); onPick(q); } }));
+      if (!items.length && !q) lista.appendChild(el("div.muted", { style: "padding:10px;font-size:13px", text: "Escribí para buscar un ejercicio." }));
+    }
+    inp.addEventListener("input", pintar);
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && inp.value.trim()) { e.preventDefault(); sh.close(); onPick(inp.value.trim()); } });
+    var sh = ui.sheet("Agregar ejercicio", el("div", {}, [inp, lista]));
+    pintar();
   }
 
   function terminar(d) {
@@ -207,12 +224,20 @@
       ]));
     });
 
-    // Duración + calorías estimadas
+    // Duración + intensidad + calorías estimadas
+    var met = 5.0; // Normal
     var minInp = el("input.input", { type: "text", inputmode: "numeric", value: min, style: "text-align:center;font-family:var(--disp);font-weight:700" });
     var kcalOut = el("div.stat", { style: "text-align:right" }, [el("span.k", { text: "Quemaste (est.)" }), el("span.v.num#kcalq", { text: "—" })]);
-    function updKcal() { ui.$("#kcalq", kcalOut).textContent = ui.n0(calc.kcalSesion(totalSets, minInp.value, peso)) + " kcal"; }
+    var seg = el("div.seg", { style: "width:100%" }, [
+      metBtn("Suave", 3.5), metBtn("Normal", 5.0, true), metBtn("Pesado", 6.5)
+    ]);
+    function metBtn(lab, v, on) {
+      return el("button", { text: lab, class: on ? "on" : "", onclick: function () { met = v; ui.$$("button", seg).forEach(function (x) { x.classList.remove("on"); }); this.classList.add("on"); updKcal(); } });
+    }
+    function updKcal() { var mm = calc.num(minInp.value, 0) || min; ui.$("#kcalq", kcalOut).textContent = ui.n0(calc.kcalActividad(met, mm, peso, true)) + " kcal"; }
     minInp.addEventListener("input", updKcal);
     body.appendChild(el("div.panel", { style: "margin-top:6px" }, [
+      el("div.field", { style: "margin-bottom:10px" }, [el("span.lab", { text: "Intensidad del entreno" }), seg]),
       el("div.between", {}, [ el("div.field", { style: "flex:1;margin-right:12px" }, [el("label", { text: "Duración (min)" }), minInp]), kcalOut ]),
       sinPeso ? el("div.muted", { style: "font-size:11.5px;margin-top:8px", text: "Cargá tu peso en Perfil para una estimación más precisa (usamos 75 kg)." }) : null
     ]));
@@ -220,7 +245,7 @@
 
     body.appendChild(el("button.btn.btn-primary.btn-block", { style: "margin-top:14px", text: "Guardar entrenamiento", onclick: function () {
       var mm = calc.num(minInp.value, 0) || min;
-      var kcal = calc.kcalSesion(totalSets, mm, peso);
+      var kcal = calc.kcalActividad(met, mm, peso, true);
       store.guardarSesion({ fecha: d.fecha, rutinaId: d.rutinaId, rutinaNombre: d.rutinaNombre, ejercicios: limpio, duracion: mm, kcal: kcal });
       draft.clear(); sh.close(); ui.toast("Entrenamiento guardado", "good"); GYM.go("#/inicio");
     } }));
@@ -274,24 +299,24 @@
     pintar();
     root.appendChild(list);
     root.appendChild(el("button.fab-add", { text: "+ Agregar ejercicio", style: "margin-top:8px", onclick: function () {
-      var nom = el("input.input", { placeholder: "Ej: Press banca" });
-      var ser = el("input.input", { type: "text", inputmode: "numeric", placeholder: "3" });
-      var rep = el("input.input", { type: "text", inputmode: "numeric", placeholder: "8" });
-      var des = el("input.input", { type: "text", inputmode: "numeric", placeholder: "90" });
-      var body = el("div", {}, [
-        el("div.field", {}, [el("label", { text: "Ejercicio" }), nom]),
-        el("div.grid.g3", { style: "margin-top:10px" }, [
-          el("div.field", {}, [el("label", { text: "Series" }), ser]),
-          el("div.field", {}, [el("label", { text: "Reps" }), rep]),
-          el("div.field", {}, [el("label", { text: "Descanso s" }), des])
-        ]),
-        el("button.btn.btn-primary.btn-block", { style: "margin-top:14px", text: "Agregar", onclick: function () {
-          if (!nom.value.trim()) { ui.toast("Escribí el ejercicio"); return; }
-          r.ejercicios.push({ nombre: nom.value.trim(), seriesObj: calc.num(ser.value, 0) || "", repsObj: calc.num(rep.value, 0) || "", descanso: calc.num(des.value, 0) || "" });
-          store.updateRutina(id, {}); sh.close(); pintar();
-        } })
-      ]);
-      var sh = ui.sheet("Agregar ejercicio", body);
+      pickerEjercicio(function (nombre) {
+        var ser = el("input.input", { type: "text", inputmode: "numeric", placeholder: "3" });
+        var rep = el("input.input", { type: "text", inputmode: "numeric", placeholder: "8" });
+        var des = el("input.input", { type: "text", inputmode: "numeric", placeholder: "90" });
+        var body = el("div", {}, [
+          el("div", { style: "font-family:var(--disp);font-weight:800;font-size:1.05rem;margin-bottom:12px", text: nombre }),
+          el("div.grid.g3", {}, [
+            el("div.field", {}, [el("label", { text: "Series" }), ser]),
+            el("div.field", {}, [el("label", { text: "Reps" }), rep]),
+            el("div.field", {}, [el("label", { text: "Descanso s" }), des])
+          ]),
+          el("button.btn.btn-primary.btn-block", { style: "margin-top:14px", text: "Agregar a la rutina", onclick: function () {
+            r.ejercicios.push({ nombre: nombre, seriesObj: calc.num(ser.value, 0) || "", repsObj: calc.num(rep.value, 0) || "", descanso: calc.num(des.value, 0) || "" });
+            store.updateRutina(id, {}); sh.close(); pintar();
+          } })
+        ]);
+        var sh = ui.sheet("Configurar ejercicio", body);
+      });
     } }));
     root.appendChild(el("button.btn.btn-primary.btn-block", { style: "margin-top:16px", text: "Empezar esta rutina", onclick: function () { iniciarSesion(id); } }));
     return root;
